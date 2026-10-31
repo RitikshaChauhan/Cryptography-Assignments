@@ -1,0 +1,611 @@
+Assignment-05
+=============================================================================
+Introduction to Asymmetric Cryptography
+Subject: Cryptography and Network Security (BCA309T)
+=============================================================================
+
+
+-----------------------------------------------------------------------------
+Q1. [Overview and principles]                                      [10 Marks]
+-----------------------------------------------------------------------------
+Explain the basic principles of asymmetric (public-key) cryptography. Describe
+the roles of the public key and the private key, and explain how the same
+scheme can provide confidentiality, authentication and non-repudiation.
+Illustrate your answer with a neat labelled diagram of the
+encryption/decryption process between two parties, Alice and Bob.
+
+ANSWER:
+
+Asymmetric (public-key) cryptography uses a PAIR of mathematically related
+keys for every user:
+   - Public key (PU): can be freely published and distributed to anyone.
+   - Private key (PR): kept secret by its owner and never shared.
+Data transformed with one key of the pair can be reversed ONLY with the other
+key of the same pair. It must be computationally infeasible to derive the
+private key from the public key. This removes the need to share a secret key
+in advance (the key distribution problem of symmetric cryptography).
+
+Basic principles:
+ 1. Each user generates a key pair; the public key is published (directory,
+    certificate), the private key is kept secret.
+ 2. The scheme is based on trapdoor one-way functions: easy to compute in the
+    forward direction, infeasible to invert without secret knowledge (the
+    trapdoor), e.g. multiplying primes vs factoring.
+ 3. Encryption algorithm and decryption algorithm are public (Kerckhoffs's
+    principle); only the private key is secret.
+
+Roles of the keys:
+ - Public key of the receiver  -> used by others to ENCRYPT messages for the
+   receiver, and to VERIFY signatures made by the owner.
+ - Private key of the owner    -> used to DECRYPT messages sent to the owner
+   and to SIGN messages.
+
+A. Confidentiality (Alice -> Bob):
+   Alice encrypts the message with BOB'S PUBLIC key; only Bob's private key
+   can decrypt it.        C = E(PU_Bob, M)          M = D(PR_Bob, C)
+
+B. Authentication and non-repudiation (digital signature):
+   Alice encrypts (signs) the message, or more commonly its hash, with
+   ALICE'S PRIVATE key; anyone can verify it with Alice's public key.
+   Authentication: only Alice has PR_Alice, so the message came from her.
+   Integrity: any change in the message makes verification fail.
+   Non-repudiation: Alice cannot later deny sending it, since only she holds
+   the private key (a symmetric MAC cannot give this, as both sides share
+   the key).        S = E(PR_Alice, H(M))      Verify: D(PU_Alice, S) = H(M)
+
+C. Both together: Alice signs with PR_Alice, then encrypts with PU_Bob.
+
+Diagram (confidentiality + authentication):
+
+   ALICE (sender)                                         BOB (receiver)
+   +---------------+                                   +----------------+
+   | Plaintext M   |                                   | Plaintext M    |
+   +-------+-------+                                   +--------^-------+
+           |                                                    |
+   [Sign: H(M) encrypted                              [Verify: decrypt signature
+    with PR_Alice]                                     with PU_Alice, compare H(M)]
+           |                                                    |
+   [Encrypt (M + signature)                           [Decrypt with PR_Bob]
+    with PU_Bob]                                                |
+           |                                                    |
+           +-------------> Ciphertext C ------------------------+
+                          (insecure channel)
+
+   Key pairs:  Alice: (PU_Alice - public, PR_Alice - private)
+               Bob  : (PU_Bob   - public, PR_Bob   - private)
+   Alice gets PU_Bob from Bob/a certificate; Bob gets PU_Alice likewise.
+   An eavesdropper sees C, PU_Alice and PU_Bob but cannot read M.
+
+
+-----------------------------------------------------------------------------
+Q2. [Overview and techniques]                                       [8 Marks]
+-----------------------------------------------------------------------------
+Differentiate between symmetric and asymmetric cryptography under the
+following headings: number of keys, key distribution, speed, key length,
+scalability for n users, and typical applications. Present your answer in
+tabular form.
+
+ANSWER:
+
+ Heading            | Symmetric cryptography        | Asymmetric cryptography
+ -------------------+-------------------------------+--------------------------------
+ Number of keys     | One shared secret key used    | Two related keys per user: public
+                    | for both encryption and       | key (encrypt/verify) and private
+                    | decryption                    | key (decrypt/sign)
+ -------------------+-------------------------------+--------------------------------
+ Key distribution   | Hard: key must be shared      | Easy: public key can be sent in
+                    | beforehand over a secure      | the open; only the authenticity
+                    | channel                       | of the public key must be ensured
+                    |                               | (certificates/PKI)
+ -------------------+-------------------------------+--------------------------------
+ Speed              | Very fast (hundreds to        | Slow (100 to 1000 times slower)
+                    | thousands of times faster);   | because of large-number modular
+                    | simple bit operations         | arithmetic
+ -------------------+-------------------------------+--------------------------------
+ Key length         | Short: 128-256 bits (AES)     | Long: 2048-4096 bits (RSA), or
+                    |                               | 256-384 bits (ECC) for similar
+                    |                               | strength
+ -------------------+-------------------------------+--------------------------------
+ Scalability for    | n(n-1)/2 keys needed for full | Only n key pairs (2n keys) needed
+ n users            | pairwise secrecy (e.g. 1000   | (e.g. 1000 users = 1000 pairs)
+                    | users = 499,500 keys)         |
+ -------------------+-------------------------------+--------------------------------
+ Typical            | Bulk data encryption: files,  | Key exchange, digital signatures,
+ applications       | disks, VPN/TLS traffic, Wi-Fi | certificates, secure email
+                    | (AES, ChaCha20, 3DES)         | (PGP/S-MIME), SSH authentication,
+                    |                               | cryptocurrencies (RSA, ECC, DH)
+ -------------------+-------------------------------+--------------------------------
+ Services provided  | Confidentiality (and          | Confidentiality, authentication,
+                    | integrity with a MAC)         | integrity, non-repudiation
+ -------------------+-------------------------------+--------------------------------
+ Examples           | DES, 3DES, AES, RC4, IDEA     | RSA, ElGamal, DSA, ECC, DH
+
+In practice both are combined (hybrid cryptosystem, see Q5).
+
+
+-----------------------------------------------------------------------------
+Q3. [Overview and techniques]                                      [10 Marks]
+-----------------------------------------------------------------------------
+Describe the main techniques and building blocks used in public-key
+cryptography, including trapdoor one-way functions, the Diffie-Hellman key
+exchange, digital signatures, and public-key infrastructure (PKI) with digital
+certificates. Explain briefly how each technique contributes to secure
+communication.
+
+ANSWER:
+
+1. Trapdoor one-way functions
+   A one-way function is easy to compute but computationally infeasible to
+   invert. A TRAPDOOR one-way function can be inverted easily if one knows a
+   secret piece of information (the trapdoor = the private key).
+   Examples (hard problems):
+     - Integer factorisation: multiplying two big primes is easy, factoring
+       the product is hard (RSA, trapdoor = p and q).
+     - Discrete logarithm problem: computing g^x mod p is easy, finding x
+       from g^x mod p is hard (Diffie-Hellman, ElGamal, DSA).
+     - Elliptic-curve discrete logarithm problem (ECC).
+   Contribution: it is the mathematical foundation that allows the public key
+   to be published without revealing the private key.
+
+2. Diffie-Hellman (DH) key exchange
+   Lets two parties establish a shared secret over an insecure channel.
+   Steps: Alice and Bob agree on public values: prime p and generator g.
+     - Alice chooses secret a, sends A = g^a mod p.
+     - Bob chooses secret b, sends B = g^b mod p.
+     - Alice computes K = B^a mod p; Bob computes K = A^b mod p;
+       both equal g^(ab) mod p.
+   Example: p = 23, g = 5, a = 6, b = 15.
+     A = 5^6 mod 23 = 8;  B = 5^15 mod 23 = 19.
+     Alice: 19^6 mod 23 = 2;  Bob: 8^15 mod 23 = 2.  Shared key = 2.
+   An eavesdropper knows p, g, A, B but must solve the discrete logarithm to
+   get K.  Weakness: plain DH is not authenticated, so it is open to a
+   man-in-the-middle attack; it must be combined with signatures/certificates.
+   Contribution: secure key establishment (also with ephemeral keys for
+   forward secrecy in TLS).
+
+3. Digital signatures
+   The sender computes a hash of the message and encrypts (signs) it with the
+   private key. The receiver decrypts it with the sender's public key and
+   compares it with a fresh hash of the received message.
+   Algorithms: RSA signatures, DSA, ECDSA, EdDSA.
+   Contribution: authentication, data integrity and non-repudiation.
+
+4. Public-Key Infrastructure (PKI) and digital certificates
+   Problem: how can Bob be sure that a public key really belongs to Alice?
+   Solution: a digital certificate (X.509) binds an identity to a public key
+   and is signed by a trusted Certificate Authority (CA).
+   A certificate contains: subject name, subject public key, issuer (CA),
+   validity period, serial number, signature algorithm and the CA's digital
+   signature.
+   Components of a PKI: Certificate Authority (issues/signs), Registration
+   Authority (verifies identity), certificate repository/directory, revocation
+   (CRL, OCSP) and the chain of trust (root CA -> intermediate CA -> end-entity
+   certificate; root certificates are pre-installed in browsers/OS).
+   Contribution: trust and authentic key distribution, which stops
+   impersonation and man-in-the-middle attacks (used in HTTPS, S/MIME, code
+   signing).
+
+
+-----------------------------------------------------------------------------
+Q4. [Historical development]                                       [10 Marks]
+-----------------------------------------------------------------------------
+Trace the historical development of public-key cryptography. Your answer
+should cover (a) the key distribution problem that motivated it, (b) the
+contribution of Diffie and Hellman (1976), (c) the invention of RSA (1977) by
+Rivest, Shamir and Adleman, (d) the earlier classified work at GCHQ by Ellis,
+Cocks and Williamson, and (e) later schemes such as ElGamal and Elliptic Curve
+Cryptography.
+
+ANSWER:
+
+(a) The key distribution problem
+   Until the 1970s all cryptography was symmetric. Two parties needed a
+   shared secret key, which had to be delivered through a secure channel
+   (couriers, key books). With the growth of computer networks, banks and
+   multi-user systems, this was costly and did not scale (n(n-1)/2 keys) and
+   there was no way to make digital signatures. Ralph Merkle's "puzzles"
+   (1974) were an early idea for key exchange over an insecure channel.
+
+(b) Diffie and Hellman (1976)
+   Whitfield Diffie and Martin Hellman published "New Directions in
+   Cryptography" (IEEE Transactions on Information Theory, Nov 1976). They
+   introduced the concept of public-key cryptography (two keys, public and
+   private) and the idea of digital signatures, and gave the first practical
+   public key-exchange protocol based on the discrete logarithm problem
+   (Diffie-Hellman key exchange). They did not yet have a full public-key
+   encryption scheme.
+
+(c) RSA (1977)
+   Ron Rivest, Adi Shamir and Leonard Adleman at MIT found the first
+   practical public-key encryption and signature scheme, based on the
+   difficulty of factoring large integers (published in 1978 in
+   Communications of the ACM). The algorithm was patented by MIT in 1983 (US
+   patent expired in September 2000). RSA became the most widely used
+   public-key algorithm (SSL/TLS, PGP, certificates).
+
+(d) Earlier classified work at GCHQ (UK)
+   - James Ellis (1970) conceived the idea of "non-secret encryption"
+     (public-key concept) but could not find a way to implement it.
+   - Clifford Cocks (1973) devised a scheme essentially equal to RSA.
+   - Malcolm Williamson (1974) devised a key exchange equal to Diffie-Hellman.
+   This work was classified by the British government and became public only
+   in 1997, so the American academics got the public credit.
+
+(e) Later schemes
+   - Rabin cryptosystem (1979): security equivalent to factoring.
+   - ElGamal (1985, Taher ElGamal): encryption and signature scheme based on
+     the discrete logarithm problem; basis for DSA/DSS (NIST, 1991-94).
+   - Elliptic Curve Cryptography (ECC): proposed independently by Neal
+     Koblitz and Victor Miller in 1985; gives the same security as RSA with
+     much smaller keys (e.g. 256-bit ECC ~ 3072-bit RSA). Used in ECDH, ECDSA,
+     Ed25519, Bitcoin, TLS 1.3, mobile devices.
+   - Post-quantum cryptography (2000s-present): because quantum computers
+     threaten RSA/ECC, NIST standardised lattice-based schemes in 2024
+     (ML-KEM based on CRYSTALS-Kyber, ML-DSA based on CRYSTALS-Dilithium) and
+     hash-based signatures (SLH-DSA).
+
+
+-----------------------------------------------------------------------------
+Q5. [Advantages and disadvantages]                                  [8 Marks]
+-----------------------------------------------------------------------------
+Discuss the advantages and disadvantages of asymmetric cryptography. Why are
+real-world systems such as TLS usually built as hybrid cryptosystems that
+combine asymmetric and symmetric algorithms? Explain with a suitable example.
+
+ANSWER:
+
+Advantages:
+ 1. No need to share a secret key in advance, so key distribution is simple
+    (only the public key is distributed).
+ 2. Better scalability: n users need only n key pairs.
+ 3. Supports digital signatures, giving authentication, integrity and
+    non-repudiation.
+ 4. Public keys can be published in directories or certificates, enabling
+    communication between strangers (e-commerce, HTTPS).
+ 5. A compromised private key affects only its owner; no other pair is
+    affected.
+
+Disadvantages:
+ 1. Much slower than symmetric algorithms (heavy modular exponentiation).
+ 2. Needs much larger keys (2048+ bit RSA) and produces larger ciphertext;
+    only small data can be encrypted directly (RSA can encrypt at most about
+    key-size minus padding bytes).
+ 3. Public keys must be authenticated: without PKI/certificates the system is
+    open to man-in-the-middle attacks.
+ 4. Relies on unproven hardness assumptions (factoring, discrete log) and
+    is threatened by quantum computers (Shor's algorithm).
+ 5. Private-key loss means loss of data/identity; key management and
+    revocation are complex.
+ 6. Higher computational and energy cost, which is a problem for small
+    devices.
+
+Why hybrid cryptosystems?
+Asymmetric crypto solves key distribution and authentication but is too slow
+for bulk data; symmetric crypto is fast but has the key-sharing problem.
+A hybrid system uses each for what it does best:
+   - Asymmetric part: authenticate the parties and establish/exchange a
+     session key.
+   - Symmetric part (AES, ChaCha20): encrypt the actual data with that
+     session key.
+
+Example: TLS (HTTPS) handshake (simplified):
+   1. Client contacts the server; the server sends its X.509 certificate
+      (containing its public key, signed by a CA).
+   2. Client verifies the certificate chain (trust/authentication).
+   3. Key establishment:
+        - Older TLS 1.2 with RSA key exchange: the client generates a random
+          pre-master secret, encrypts it with the server's RSA public key and
+          sends it; the server decrypts it with its private key.
+        - Modern TLS 1.3: ephemeral (EC)DH exchange, with the server signing
+          the handshake using its private key; this gives forward secrecy.
+   4. Both sides derive the same symmetric session keys from the shared
+      secret.
+   5. All application data is encrypted and authenticated with a symmetric
+      AEAD cipher such as AES-GCM or ChaCha20-Poly1305.
+Result: security of public-key crypto with speed of symmetric crypto.
+(PGP is another example: the message is encrypted with a random AES key, and
+that key is encrypted with the receiver's public RSA key.)
+
+
+-----------------------------------------------------------------------------
+Q6. [RSA algorithms and key generation]                            [12 Marks]
+-----------------------------------------------------------------------------
+Describe the RSA algorithm in detail. Explain the key generation process step
+by step (choosing two large primes, computing the modulus and Euler's totient
+function, selecting the public exponent, and deriving the private exponent),
+and then explain how encryption and decryption work, stating the formulas
+used. Include a flowchart of the algorithm and explain why decryption
+correctly recovers the original message.
+
+ANSWER:
+
+RSA (Rivest-Shamir-Adleman, 1977) is a public-key cryptosystem whose security
+rests on the difficulty of factoring the product of two large primes.
+
+A. Key generation
+ 1. Choose two large distinct random primes p and q (each about half the
+    desired key size, e.g. 1024 bits each for RSA-2048), kept secret.
+ 2. Compute the modulus  n = p x q.   (n is public; its bit length is the
+    "key size".)
+ 3. Compute Euler's totient  phi(n) = (p - 1)(q - 1).
+ 4. Choose the public exponent e such that 1 < e < phi(n) and
+    gcd(e, phi(n)) = 1. Common choice: e = 65537 (2^16 + 1) (or 3, 17).
+ 5. Compute the private exponent d as the modular multiplicative inverse of e:
+        d x e = 1 (mod phi(n)),   i.e. d = e^(-1) mod phi(n)
+    using the Extended Euclidean Algorithm.
+ 6. Public key  PU = {e, n}.   Private key  PR = {d, n}
+    (p, q and phi(n) must be kept secret or destroyed).
+
+B. Encryption (using the receiver's public key)
+        C = M^e mod n          where 0 <= M < n
+
+C. Decryption (using the private key)
+        M = C^d mod n
+
+D. Numerical example
+   p = 61, q = 53.  n = 61 x 53 = 3233.
+   phi(n) = 60 x 52 = 3120.
+   Choose e = 17 (gcd(17, 3120) = 1).
+   d = 17^(-1) mod 3120 = 2753  (check: 17 x 2753 = 46801 = 15 x 3120 + 1).
+   Public key = (17, 3233); private key = (2753, 3233).
+   Encrypt M = 65:  C = 65^17 mod 3233 = 2790.
+   Decrypt:         M = 2790^2753 mod 3233 = 65.
+
+E. Flowchart
+
+        +------------------------+
+        |         START          |
+        +-----------+------------+
+                    |
+        +-----------v------------+
+        | Choose large primes    |
+        | p and q                |
+        +-----------+------------+
+                    |
+        +-----------v------------+
+        | n = p x q              |
+        | phi = (p-1)(q-1)       |
+        +-----------+------------+
+                    |
+        +-----------v------------+
+        | Choose e:              |
+        | 1 < e < phi,           |
+        | gcd(e, phi) = 1        |
+        +-----------+------------+
+                    |
+        +-----------v------------+
+        | d = e^-1 mod phi       |
+        +-----------+------------+
+                    |
+        +-----------v------------+
+        | Public key  = (e, n)   |
+        | Private key = (d, n)   |
+        +-----------+------------+
+                    |
+        +-----------v------------+     +----------------------------+
+        | Sender: C = M^e mod n  +---->| Receiver: M = C^d mod n    |
+        +------------------------+     +-------------+--------------+
+                                                     |
+                                        +------------v-------------+
+                                        |           END            |
+                                        +--------------------------+
+
+F. Why decryption works (proof)
+   Because d x e = 1 (mod phi(n)), we can write  e x d = 1 + k x phi(n)
+   for some integer k. Then
+        C^d = (M^e)^d = M^(ed) = M^(1 + k phi(n)) = M x (M^phi(n))^k  (mod n)
+   By Euler's theorem, if gcd(M, n) = 1 then M^phi(n) = 1 (mod n), so
+        C^d = M x 1^k = M (mod n).
+   If M is a multiple of p or q (rare), use Fermat's little theorem modulo p
+   and modulo q separately: M^(ed) = M (mod p) and (mod q); by the Chinese
+   Remainder Theorem it holds mod n = pq as well. Hence decryption always
+   returns the original M.
+   Security: to find d an attacker must know phi(n), which needs the
+   factors p and q, so he must factor n.
+
+
+-----------------------------------------------------------------------------
+Q7. [Key sizes]                                                    [10 Marks]
+-----------------------------------------------------------------------------
+What is meant by the key size of an RSA system? Explain why the security of
+RSA depends on the difficulty of factoring the modulus. Discuss the commonly
+recommended RSA key sizes (1024, 2048, 3072 and 4096 bits), compare them with
+equivalent-strength ECC keys, and comment on the threat that quantum computers
+(Shor's algorithm) pose to RSA.
+
+ANSWER:
+
+A. Meaning of RSA key size
+   The key size of RSA is the bit length of the modulus n = p x q (for example
+   a 2048-bit key means n has 2048 bits, and p and q are about 1024 bits each).
+   It also limits the maximum message size that can be encrypted directly
+   (message must be smaller than n; less after padding) and determines the
+   signature/ciphertext size.
+
+B. Why RSA depends on factoring
+   The public key (e, n) is known to everyone. The private exponent d =
+   e^(-1) mod phi(n), and phi(n) = (p-1)(q-1) can be computed only if p and q
+   are known. Multiplying p and q is easy, but factoring a large n has no
+   known efficient classical algorithm (best: General Number Field Sieve, sub-
+   exponential time). So an attacker who can factor n can compute phi(n),
+   then d, and break everything. (Breaking RSA is not proved to be equivalent
+   to factoring, but factoring is the best-known way.)
+   Factoring records: RSA-768 (2009), RSA-829/RSA-250 (2020) took years of
+   computing, so 2048-bit moduli remain far out of reach.
+
+C. Recommended RSA key sizes
+
+ RSA key size | Approx. security | Equivalent ECC key | Remarks
+ -------------+------------------+--------------------+------------------------------
+ 1024 bits    | ~80 bits         | 160 bits           | Obsolete/deprecated; considered
+              |                  |                    | breakable by well-funded
+              |                  |                    | attackers; do not use.
+ 2048 bits    | ~112 bits        | 224 bits           | Minimum recommended today;
+              |                  |                    | widely used in TLS and
+              |                  |                    | certificates (acceptable
+              |                  |                    | until about 2030 per NIST).
+ 3072 bits    | ~128 bits        | 256 bits           | Recommended for long-term
+              |                  |                    | security (matches AES-128).
+ 4096 bits    | ~140+ bits       | roughly 256-384    | Extra margin; slower (key
+              |                  | bits               | generation and private-key
+              |                  |                    | operations take much longer),
+              |                  |                    | larger certificates.
+ (7680 bits)  | ~192 bits        | 384 bits           | Matches AES-192
+ (15360 bits) | ~256 bits        | 512 bits           | Matches AES-256
+
+   (Strength values follow NIST SP 800-57 guidance.) Observation: RSA key
+   size must grow very fast for higher security while ECC grows linearly,
+   so ECC gives equal security with much smaller keys, signatures and
+   faster operations, which is helpful for mobile and IoT devices.
+   Doubling the RSA key size increases private-key operation cost roughly 6-8
+   times.
+
+D. Quantum threat (Shor's algorithm)
+   In 1994 Peter Shor showed that a sufficiently large quantum computer can
+   factor integers (and compute discrete logarithms) in polynomial time. This
+   would break RSA, Diffie-Hellman, DSA and ECC completely, no matter how
+   large the keys are made within practical limits. Currently available
+   quantum computers are far too small and noisy: breaking RSA-2048 is
+   estimated to need thousands of error-corrected (logical) qubits, i.e.
+   millions of physical qubits with today's error correction, so there is no
+   immediate threat. However, there is the "harvest now, decrypt later" risk
+   (attackers store encrypted traffic today and decrypt it when quantum
+   computers become available).
+   By comparison, Grover's algorithm only halves the effective strength of
+   symmetric keys (AES-256 remains safe).
+   Response: migrate to post-quantum cryptography. NIST standardised
+   ML-KEM (FIPS 203, from CRYSTALS-Kyber), ML-DSA (FIPS 204) and SLH-DSA
+   (FIPS 205) in 2024; hybrid (classical + PQC) key exchange is already being
+   deployed in TLS.
+
+
+-----------------------------------------------------------------------------
+Q8. [Security considerations]                                      [12 Marks]
+-----------------------------------------------------------------------------
+Discuss the major security considerations and known attacks on RSA, including
+(a) factoring attacks, (b) small public exponent and small message attacks,
+(c) common modulus attack, (d) timing and other side-channel attacks, and
+(e) chosen-ciphertext attacks. Explain why padding schemes such as OAEP are
+required, how RSA is used for digital signatures, and list good practices for
+secure RSA deployment.
+
+ANSWER:
+
+(a) Factoring attacks
+   If the attacker factors n into p and q, he computes phi(n) and d.
+   Methods: trial division, Fermat's method (works if p and q are close),
+   Pollard's rho, Pollard's p-1 (works if p-1 has only small factors),
+   quadratic sieve and the General Number Field Sieve (GNFS, best classical
+   algorithm).
+   Weak-key issues: small modulus, p and q too close, p-1 or q-1 smooth,
+   primes generated with a poor random number generator (different keys
+   sharing a prime can be found by computing gcd of moduli).
+   Defence: use at least 2048-bit (preferably 3072-bit) moduli, strong random
+   primes chosen far apart, good RNG.
+
+(b) Small public exponent and small message attacks
+   - Small message: if M^e < n (e.g. e = 3 and a short M), then no modular
+     reduction occurs, and the attacker simply takes the ordinary e-th root
+     of C to get M.
+   - Hastad's broadcast attack: if the same message is sent to e (or more)
+     recipients having the same small e = 3 but different moduli, the
+     Chinese Remainder Theorem gives M^3 as an integer, and a cube root
+     recovers M.
+   - Small private exponent: Wiener's attack recovers d (using continued
+     fractions) if d < n^(1/4)/3; so d must never be chosen small to speed
+     up decryption.
+   Defence: use e = 65537, random padding (OAEP) so that M is always large
+   and randomised, never choose small d.
+
+(c) Common modulus attack
+   Suppose two users (or two keys) share the same modulus n with different
+   exponents e1 and e2, with gcd(e1, e2) = 1, and the same message M is
+   encrypted to both: C1 = M^e1 mod n, C2 = M^e2 mod n. The attacker uses the
+   extended Euclidean algorithm to find integers a and b with
+   a x e1 + b x e2 = 1, and computes
+        C1^a x C2^b = M^(a e1 + b e2) = M (mod n)   (a negative exponent uses
+        the modular inverse of C).
+   Also, anyone who knows his own (e, d) pair can factor the shared n and so
+   break the other users' keys.
+   Defence: each user must have a unique modulus n (never share n).
+
+(d) Timing and other side-channel attacks
+   These attack the IMPLEMENTATION, not the mathematics.
+   - Timing attack (Kocher, 1996): the time taken by modular exponentiation
+     depends on the bits of d; measuring many decryption times reveals d.
+   - Power analysis (SPA/DPA), electromagnetic leakage, cache attacks, and
+     acoustic attacks reveal key bits from device behaviour.
+   - Fault attacks (e.g. Bellcore attack on RSA-CRT): one faulty signature
+     computed with the CRT optimisation allows computing a prime factor via
+     gcd(s^e - m, n).
+   Defence: constant-time implementations, blinding (randomise the ciphertext
+   before the private-key operation, then remove the blind), verify the
+   signature before output, hardware shielding, and use of vetted libraries.
+
+(e) Chosen-ciphertext attacks (CCA)
+   Textbook RSA is deterministic and malleable: E(M1) x E(M2) mod n =
+   E(M1 x M2). An attacker who can get the victim to decrypt chosen
+   ciphertexts can recover M: to decrypt C, send C' = C x r^e mod n to the
+   decryption oracle, receive M' = M x r mod n and compute M = M' x r^(-1)
+   mod n.
+   Bleichenbacher's attack (1998) exploited error messages revealing whether
+   PKCS#1 v1.5 padding was valid, allowing decryption of TLS pre-master
+   secrets with a million or so queries (later variants: DROWN, ROBOT).
+   Defence: use OAEP, return no distinguishing errors, constant-time padding
+   checks, or avoid RSA key exchange altogether (use ephemeral ECDH).
+
+Why padding schemes such as OAEP are required:
+   Textbook RSA is deterministic (same message gives same ciphertext, so
+   guessing/dictionary attacks work), malleable, leaks partial information,
+   and is vulnerable to small-message and broadcast attacks. Optimal
+   Asymmetric Encryption Padding (OAEP, PKCS#1 v2) preprocesses M with random
+   seed, hash and mask generation functions (MGF) in a Feistel-like two-round
+   structure before encryption. It makes encryption probabilistic (same
+   message gives different ciphertexts), fills the message up to the length of
+   n, and gives security against adaptive chosen-ciphertext attacks (IND-CCA2)
+   in the random-oracle model. For signatures RSA-PSS (Probabilistic Signature
+   Scheme) is used.
+
+RSA for digital signatures:
+   Signing (with the private key):      S = H(M)^d mod n   (after padding,
+                                                             PKCS#1 v1.5 or PSS)
+   Sending: M together with S.
+   Verification (with public key):      H' = S^e mod n; the receiver computes
+                                        H(M) of the received message and
+                                        checks that it equals H'.
+   If they match, the message is authentic (signed by the private key owner)
+   and unchanged. The hash is signed (not the whole message) for speed and to
+   prevent forgery attacks; the signature gives non-repudiation.
+
+Good practices for secure RSA deployment:
+ 1. Use a key size of at least 2048 bits (3072 or more for long-term data).
+ 2. Generate primes with a cryptographically secure random number generator
+    and test them with strong primality tests (Miller-Rabin).
+ 3. Use e = 65537; never use a small private exponent.
+ 4. Never share a modulus between users; do not reuse key pairs across
+    different purposes (separate keys for encryption and signing).
+ 5. Always use OAEP for encryption and PSS for signatures (never textbook
+    RSA); use strong hashes such as SHA-256 or higher (not MD5/SHA-1).
+ 6. Use well-tested libraries (OpenSSL, libsodium, etc.) with constant-time
+    code, blinding and CRT fault checks; do not write your own crypto.
+ 7. Protect private keys: store in HSMs/smart cards or encrypted key stores,
+    use access control, and rotate keys periodically.
+ 8. Use certificates from trusted CAs, check revocation (CRL/OCSP) and expiry.
+ 9. Prefer forward secrecy (ephemeral ECDHE) for key exchange instead of RSA
+    key transport.
+10. Plan the transition to post-quantum or hybrid algorithms for long-lived
+    data.
+
+
+=============================================================================
+Reference books:
+1. William Stallings, "Cryptography and Network Security: Principles and
+   Practice", Pearson.
+2. Behrouz A. Forouzan, "Cryptography and Network Security", McGraw-Hill.
+3. R. Rivest, A. Shamir, L. Adleman, "A Method for Obtaining Digital
+   Signatures and Public-Key Cryptosystems", CACM, 1978.
+4. W. Diffie, M. Hellman, "New Directions in Cryptography", IEEE Trans.
+   Information Theory, 1976.
+5. NIST SP 800-57 (key management), FIPS 186-5 (digital signatures),
+   FIPS 203/204/205 (post-quantum standards).
+=============================================================================

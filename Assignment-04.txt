@@ -1,0 +1,712 @@
+Assignment-04
+=============================================================================
+Introduction to Symmetric Cryptography
+Subject: Cryptography and Network Security (BCA309T)
+=============================================================================
+
+
+-----------------------------------------------------------------------------
+Q1. [Principles and techniques]                                    [10 Marks]
+-----------------------------------------------------------------------------
+Explain the basic principles of symmetric cryptography. Describe the roles of
+the plaintext, ciphertext, secret key, encryption algorithm and decryption
+algorithm, and explain Kerckhoffs's principle. Illustrate your answer with a
+neat labelled block diagram of a symmetric cryptosystem.
+
+ANSWER:
+
+Symmetric cryptography (also called secret-key or single-key cryptography) is
+the branch of cryptography in which the SAME secret key is used by the sender
+for encryption and by the receiver for decryption. Both parties must share
+the key in advance over a secure channel, and the key must be kept secret from
+everyone else.
+
+Components of a symmetric cryptosystem:
+
+1. Plaintext (P)  - The original, readable message or data given as input to
+   the encryption algorithm.
+
+2. Encryption algorithm (E) - The procedure that performs substitutions and
+   transformations on the plaintext using the secret key. Output: ciphertext.
+
+3. Secret key (K) - A value independent of the plaintext and of the algorithm.
+   The exact substitutions/transformations performed depend on this key.
+   Changing the key changes the output completely.
+
+4. Ciphertext (C) - The scrambled, unreadable output produced by the
+   encryption algorithm. It depends on both plaintext and key. For a given
+   plaintext, two different keys produce two different ciphertexts.
+
+5. Decryption algorithm (D) - Essentially the encryption algorithm run in
+   reverse. It takes the ciphertext and the same secret key and recovers the
+   original plaintext.
+
+Mathematical form:
+        C = E(K, P)          P = D(K, C) = D(K, E(K, P))
+
+Block diagram of a symmetric cryptosystem:
+
+   +-----------+      +----------------+                +----------------+      +-----------+
+   | Plaintext |----->|   Encryption   |---- Ciphertext-|   Decryption   |----->| Plaintext |
+   |    (P)    |      |  Algorithm (E) |  (C)  over     |  Algorithm (D) |      |    (P)    |
+   +-----------+      +--------^-------+  insecure      +--------^-------+      +-----------+
+      SENDER                   |          channel                |                 RECEIVER
+                               |                                 |
+                         +-----+---------------------------------+-----+
+                         |  Secret Key (K) - shared via a SECURE       |
+                         |  channel / key distribution mechanism       |
+                         +---------------------------------------------+
+                                            ^
+                                            |
+                          Attacker (cryptanalyst) can see C
+                          but must not learn K or P
+
+Kerckhoffs's principle:
+A cryptosystem should be secure even if everything about the system, except
+the key, is public knowledge. In other words, the security of the system must
+depend only on the secrecy of the key and NOT on the secrecy of the algorithm.
+Reasons: (a) algorithms can be leaked, reverse-engineered or captured; (b) a
+public algorithm is analysed by many experts, so flaws are found early (e.g.
+AES was chosen via an open competition); (c) if a key is compromised, only the
+key has to be replaced, not the whole algorithm. (The opposite approach,
+"security through obscurity", is considered weak.)
+
+Basic requirements/principles:
+- A strong encryption algorithm (an attacker knowing the algorithm and several
+  ciphertexts should not be able to find the key or plaintext).
+- Sender and receiver must obtain the secret key in a secure fashion and keep
+  it secure (the key distribution problem is the main weakness).
+- Two main techniques used inside the algorithm are substitution and
+  transposition; two security goals are confusion and diffusion.
+
+Advantages: very fast, suitable for large data, efficient in hardware.
+Disadvantages: key distribution and key management (n users need n(n-1)/2
+keys), and no non-repudiation.
+
+
+-----------------------------------------------------------------------------
+Q2. [Principles and techniques]                                    [10 Marks]
+-----------------------------------------------------------------------------
+Distinguish between stream ciphers and block ciphers. Discuss the concepts of
+confusion and diffusion, and explain the main block cipher modes of operation
+(ECB, CBC, CFB, OFB and CTR) along with the strengths and weaknesses of each
+mode.
+
+ANSWER:
+
+A. Stream cipher vs Block cipher
+
+ Feature            | Stream cipher                  | Block cipher
+ -------------------+--------------------------------+---------------------------------
+ Unit processed     | One bit/byte at a time         | Fixed-size block (e.g. 64/128 bits)
+ Key usage          | Key generates a pseudorandom   | Same key applied to every block
+                    | keystream, XORed with data     | through multiple rounds
+ Speed / hardware   | Very fast, small hardware      | Slower per bit, more complex
+ Error propagation  | Usually none (1 bit error ->   | Error affects whole block (and
+                    | 1 bit error)                   | maybe next, depending on mode)
+ Memory             | Usually no memory of past data | Depends on mode of operation
+ Padding            | Not needed                     | Needed if data is not a multiple
+                    |                                | of block size
+ Examples           | RC4, Salsa20, ChaCha20, A5/1   | DES, 3DES, AES, IDEA, Blowfish
+ Typical use        | Real-time/streaming, wireless  | Files, disk, general encryption
+
+ Stream cipher: C_i = P_i XOR KeyStream_i.  The keystream must never be reused
+ with the same key (otherwise C1 XOR C2 = P1 XOR P2 leaks information).
+
+B. Confusion and Diffusion (Claude Shannon, 1949)
+
+ Confusion - makes the relationship between the key and the ciphertext as
+   complex as possible, so that the key cannot be deduced from the ciphertext.
+   Achieved mainly by SUBSTITUTION (e.g. S-boxes in DES/AES).
+
+ Diffusion - spreads the influence of each plaintext bit over many ciphertext
+   bits, hiding the statistical structure (frequency patterns) of the
+   plaintext. A one-bit change in plaintext should change about half the
+   ciphertext bits (avalanche effect). Achieved mainly by PERMUTATION /
+   TRANSPOSITION (e.g. P-box in DES, ShiftRows and MixColumns in AES).
+
+ Good block ciphers repeat both in many rounds.
+
+C. Block cipher modes of operation
+(P_i = plaintext block, C_i = ciphertext block, E_K = encryption with key K,
+ IV = initialization vector)
+
+1. ECB (Electronic Codebook)
+   Each block is encrypted independently:   C_i = E_K(P_i)
+   Strengths : simple; blocks can be encrypted/decrypted in parallel; an error
+               in one block does not affect other blocks; random access.
+   Weaknesses: identical plaintext blocks give identical ciphertext blocks, so
+               patterns are visible (the famous "ECB penguin"); blocks can be
+               rearranged, replayed or deleted without detection. Not
+               recommended for more than one block of data.
+
+2. CBC (Cipher Block Chaining)
+   C_i = E_K(P_i XOR C_(i-1)),   C_0 = IV.   Decryption: P_i = D_K(C_i) XOR C_(i-1)
+   Strengths : identical plaintext blocks give different ciphertext; widely
+               used; decryption can be parallelised; limited error recovery
+               (a corrupted block affects only that block and the next).
+   Weaknesses: encryption is sequential (cannot be parallelised); needs a
+               random, unpredictable IV; needs padding; vulnerable to padding
+               oracle attacks if implemented badly.
+
+3. CFB (Cipher Feedback)
+   C_i = P_i XOR MSB_s(E_K(Shift register));  the register is then updated with
+   C_i. Turns a block cipher into a self-synchronising stream cipher (s-bit
+   units).
+   Strengths : no padding needed; works on units smaller than a block; recovers
+               from lost/damaged bits after one block.
+   Weaknesses: encryption is sequential; one bit error affects the current and
+               following block; the cipher's encryption function is used for
+               both encryption and decryption; unique IV needed.
+
+4. OFB (Output Feedback)
+   O_i = E_K(O_(i-1)),  O_0 = IV;   C_i = P_i XOR O_i
+   Strengths : keystream is independent of the plaintext, so it can be
+               pre-computed; no padding; bit errors do not propagate (1 bit
+               error in C gives 1 bit error in P).
+   Weaknesses: sequential; IV must never be reused with the same key; an
+               attacker can flip chosen bits in plaintext by flipping bits in
+               the ciphertext (no integrity).
+
+5. CTR (Counter)
+   C_i = P_i XOR E_K(Nonce || Counter_i)   (counter incremented per block)
+   Strengths : fully parallelisable (encryption and decryption), random access
+               to any block, no padding, no error propagation, efficient in
+               hardware; widely used (e.g. in GCM).
+   Weaknesses: a nonce/counter value must NEVER repeat with the same key
+               (otherwise the keystream repeats); malleable (bit flipping)
+               unless combined with authentication (e.g. AES-GCM).
+
+Note: CBC, CFB, OFB, CTR give confidentiality only; authenticated modes like
+GCM or CCM are preferred to also give integrity.
+
+
+-----------------------------------------------------------------------------
+Q3. [Historical development]                                       [10 Marks]
+-----------------------------------------------------------------------------
+Trace the historical development of symmetric encryption algorithms. Your
+answer should cover early ciphers such as the Caesar cipher and the Enigma
+machine, Shannon's work on information theory, the Feistel cipher, the
+adoption of DES in 1977, the rise of Triple DES and other algorithms (such as
+IDEA, Blowfish and RC4), and the open competition that led to AES.
+
+ANSWER:
+
+1. Ancient and classical ciphers
+   - Scytale (Sparta, ~5th century BC): a transposition device using a rod.
+   - Caesar cipher (~1st century BC): each letter shifted by a fixed number
+     (Julius Caesar used 3). Only 25 possible keys, so easily broken.
+   - Al-Kindi (9th century) described frequency analysis, breaking simple
+     substitution ciphers.
+   - Vigenere cipher (16th century): polyalphabetic; long considered
+     unbreakable ("le chiffre indechiffrable") until Kasiski (1863) and
+     Babbage showed how to attack it.
+   - Playfair cipher (1854, Wheatstone/Playfair): digraph substitution.
+
+2. Mechanical/electromechanical era
+   - Enigma machine (invented ~1918 by Arthur Scherbius, used by Germany in
+     World War II): rotors, plugboard and reflector gave a huge key space
+     (about 10^23 settings) and a polyalphabetic substitution that changed
+     with every key press. It was broken by Polish mathematicians (Rejewski)
+     and later at Bletchley Park (Alan Turing, "Bombe"). This showed the
+     importance of cryptanalysis and key-handling discipline.
+
+3. Shannon and information theory (1948-1949)
+   - Claude Shannon's "A Mathematical Theory of Communication" (1948) and
+     "Communication Theory of Secrecy Systems" (1949) put cryptography on a
+     scientific footing. He introduced the ideas of confusion and diffusion,
+     perfect secrecy (proved the one-time pad is perfectly secret), and the
+     product-cipher concept.
+
+4. Feistel cipher (early 1970s)
+   - Horst Feistel at IBM developed the Lucifer cipher and the Feistel
+     structure: the block is split into two halves; in each round
+     L_i = R_(i-1), R_i = L_(i-1) XOR F(R_(i-1), K_i). The same structure is
+     used for encryption and decryption (only the subkey order is reversed)
+     and F need not be invertible. This is the basis for DES and many ciphers.
+
+5. DES (1977)
+   - In 1973 NBS (now NIST) asked for a standard cipher. IBM's modification of
+     Lucifer (with NSA input) was adopted as the Data Encryption Standard
+     (FIPS 46) in 1977: 64-bit block, 56-bit key, 16 rounds. It became the
+     world's most widely used cipher but its short key was criticised from the
+     start. In 1998 the EFF "Deep Crack" machine broke DES in about 56 hours
+     (and in 1999 in under 24 hours with distributed.net).
+
+6. Triple DES and other algorithms
+   - Triple DES (3DES, mid-1980s/1990s, ANSI X9.17 and later FIPS 46-3):
+     applies DES three times (EDE) to get a 112-bit effective strength without
+     redesigning hardware. Slow, and 64-bit blocks are now a weakness
+     (Sweet32).
+   - RC4 (1987, Ron Rivest): a fast, simple stream cipher used in WEP, SSL/TLS
+     and WPA-TKIP; later found to have biases and is now prohibited in TLS.
+   - IDEA (1991, Lai and Massey): 64-bit block, 128-bit key, 8.5 rounds,
+     uses mixed operations (XOR, addition mod 2^16, multiplication mod
+     2^16+1). Used in early PGP.
+   - Blowfish (1993, Bruce Schneier): 64-bit Feistel cipher, variable key
+     32-448 bits, key-dependent S-boxes, fast in software, free and
+     unpatented. Succeeded by Twofish.
+   - Others: RC5/RC6, CAST-128, SAFER, etc.
+
+7. AES competition (1997-2001)
+   - Because DES was too weak and 3DES too slow, NIST announced an open,
+     public competition in 1997 for the Advanced Encryption Standard
+     (128-bit block; 128/192/256-bit keys).
+   - 15 candidates were accepted in 1998; 5 finalists were chosen in 1999:
+     MARS, RC6, Rijndael, Serpent and Twofish.
+   - In October 2000 NIST selected Rijndael (by Joan Daemen and Vincent
+     Rijmen, Belgium) and published it as FIPS 197 in 2001. AES is now the
+     worldwide standard for symmetric encryption.
+
+Trend: from simple hand ciphers -> machines -> mathematically analysed block
+ciphers -> open, public standards with larger keys and blocks.
+
+
+-----------------------------------------------------------------------------
+Q4. [Classical symmetric encryption]                               [10 Marks]
+-----------------------------------------------------------------------------
+Explain the following classical substitution ciphers with their working
+principle, strengths and weaknesses: (a) Caesar cipher, (b) monoalphabetic
+substitution cipher, (c) Playfair cipher, and (d) Vigenere polyalphabetic
+cipher. Why is frequency analysis effective against some of these ciphers but
+not others?
+
+ANSWER:
+
+(a) Caesar cipher
+   Principle: Each plaintext letter is replaced by the letter k positions
+   later in the alphabet (cyclic).  C = (P + k) mod 26,  P = (C - k) mod 26.
+   Example (k = 3): HELLO -> KHOOR.
+   Strengths : extremely simple to use.
+   Weaknesses: only 25 useful keys, so brute force takes seconds; letter
+               frequencies are preserved; fixed shift.
+
+(b) Monoalphabetic substitution cipher
+   Principle: Each plaintext letter is mapped to a different letter according
+   to an arbitrary permutation of the alphabet (the key is the permutation).
+   Example: plain  = abcdefghijklmnopqrstuvwxyz
+            cipher = QWERTYUIOPASDFGHJKLZXCVBNM,  so "hello" -> ITSSG.
+   Strengths : huge key space, 26! (about 4 x 10^26), so brute force is
+               infeasible.
+   Weaknesses: one plain letter always maps to the same cipher letter, so the
+               language's letter frequencies, digraphs/trigraphs and word
+               patterns survive; broken easily by frequency analysis.
+
+(c) Playfair cipher
+   Principle: Uses a 5x5 matrix built from a keyword (I and J share a cell).
+   Plaintext is split into digraphs (pairs; double letters separated by X; an
+   odd letter padded with X). For each pair:
+     - same row    -> take the letter to the right of each (wrap around);
+     - same column -> take the letter below each (wrap around);
+     - otherwise (rectangle) -> take the letters in the same row at the
+       opposite corners of the rectangle.
+   Example matrix with keyword MONARCHY:
+        M O N A R
+        C H Y B D
+        E F G I/J K
+        L P Q S T
+        U V W X Z
+   "BALLOON" -> BA LX LO ON -> IB SU PM NA.
+   Strengths : encrypts digraphs, so there are 600+ possible digraphs, which
+               flattens single-letter frequencies; used in the Boer War and
+               WWI.
+   Weaknesses: digraph frequency analysis is still possible (needs more
+               ciphertext); structure of language remains; small key space for
+               a keyword (breakable by hand or by computer with known
+               plaintext).
+
+(d) Vigenere polyalphabetic cipher
+   Principle: A repeating keyword selects a different Caesar shift for each
+   plaintext letter.  C_i = (P_i + K_(i mod m)) mod 26,  m = key length.
+   Example: plaintext ATTACKATDAWN, key LEMON
+            -> key stream LEMONLEMONLE -> ciphertext LXFOPVEFRNHR.
+   Strengths : the same plaintext letter can map to different ciphertext
+               letters, which flattens frequency distribution; resists simple
+               frequency analysis.
+   Weaknesses: the key repeats, so it is periodic. Kasiski examination or the
+               Index of Coincidence reveals the key length m; then the text is
+               split into m Caesar ciphers, each broken by frequency
+               analysis.
+
+Why frequency analysis works on some ciphers but not others:
+In every natural language, letters occur with characteristic frequencies
+(in English E, T, A, O ... are common; Z, Q, X are rare). Caesar and
+monoalphabetic substitution replace each letter by exactly one fixed letter,
+so the ciphertext keeps the same frequency pattern (just relabelled); matching
+the most common ciphertext letters with E, T, A etc. breaks the cipher.
+Playfair hides single-letter frequencies, so analysis must be done on
+digraphs, which is harder. Vigenere uses several alphabets, so the overall
+frequency curve is flattened; analysis only works after the key length is
+found. Truly random polyalphabetic ciphers with a key as long as the message
+(one-time pad) show a completely flat distribution, so frequency analysis
+fails entirely.
+
+
+-----------------------------------------------------------------------------
+Q5. [Classical symmetric encryption]                                [8 Marks]
+-----------------------------------------------------------------------------
+Describe the classical transposition techniques, including the rail fence
+cipher and the columnar transposition cipher. Explain how product ciphers
+combine substitution and transposition, and why this idea forms the foundation
+of modern block ciphers. Also discuss the one-time pad and explain why it is
+theoretically unbreakable yet impractical.
+
+ANSWER:
+
+Transposition ciphers rearrange the POSITIONS of plaintext letters without
+changing the letters themselves (permutation). Letter frequencies of the
+plaintext are therefore preserved, which is a clue for cryptanalysts.
+
+1. Rail fence cipher
+   Plaintext is written diagonally (zig-zag) on a number of "rails" (the key
+   = number of rails) and then read off rail by rail.
+   Example (2 rails): HELLOWORLD
+        H . L . O . O . L .
+        . E . L . W . R . D
+   Ciphertext = HLOOL ELWRD  (row 1 followed by row 2).
+   Weakness: very small key space (few possible rail counts).
+
+2. Columnar transposition cipher
+   Plaintext is written in rows under a keyword/number key; columns are then
+   read in the order given by the key.
+   Example: plaintext ATTACKATDAWN, key 3 1 4 2
+        Key:   3 1 4 2
+               A T T A
+               C K A T
+               D A W N
+   Read columns in key order (1,2,3,4): TKA ATN ACD TAW
+   Ciphertext = TKAATNACDTAW.
+   A double transposition (applying the process twice with different keys)
+   gives much better security and was used in WWII.
+
+3. Product ciphers
+   A product cipher combines two or more simple ciphers (typically
+   substitution then transposition) so that the result is stronger than
+   either alone. Substitution provides CONFUSION; transposition/permutation
+   provides DIFFUSION. Shannon proposed alternating them over several rounds.
+   Modern block ciphers such as DES (S-boxes + P-box in 16 Feistel rounds) and
+   AES (SubBytes + ShiftRows/MixColumns in 10-14 rounds) are iterated product
+   ciphers: each round applies substitution, permutation and key mixing, and
+   repeating the rounds multiplies the strength, creating the avalanche
+   effect.
+
+4. One-time pad (OTP, Vernam cipher)
+   Principle: The plaintext is combined (XOR for bits, or addition mod 26 for
+   letters) with a truly random key that is as long as the message, used only
+   once and then destroyed.   C = P XOR K,   P = C XOR K.
+   Why it is unbreakable: Shannon proved it provides perfect secrecy. Since
+   the key is random and as long as the message, every possible plaintext of
+   that length is equally likely for a given ciphertext. The ciphertext gives
+   no information about the plaintext, even with unlimited computing power.
+   Why it is impractical:
+     - the key must be as long as the message (key distribution/storage
+       problem);
+     - the key must be truly random (hard to generate);
+     - a key can never be reused (reuse leaks P1 XOR P2, as happened with the
+       Soviet VENONA traffic);
+     - both sides must keep perfectly synchronised copies and destroy them
+       after use.
+   Hence OTP is used only for very high-security, low-volume communication
+   (e.g. diplomatic hotlines). Practical systems use stream ciphers that
+   imitate an OTP with a pseudorandom keystream generated from a short key.
+
+
+-----------------------------------------------------------------------------
+Q6. [Data Encryption Standard (DES)]                               [12 Marks]
+-----------------------------------------------------------------------------
+Describe the structure of the Data Encryption Standard (DES). Explain the
+Feistel structure, block size and key size, the initial and final
+permutations, the 16 rounds, the role of the round function (expansion, key
+mixing, S-boxes and P-box permutation), and the key schedule. Support your
+answer with a neat diagram of one DES round.
+
+ANSWER:
+
+Overview: DES is a symmetric block cipher based on the Feistel structure.
+ - Block size  : 64 bits (plaintext and ciphertext)
+ - Key size    : 64 bits, of which 8 are parity bits, so the effective key is
+                 56 bits
+ - Rounds      : 16
+ - Subkeys     : sixteen 48-bit round keys (K1 ... K16)
+ - Same algorithm is used for decryption, with subkeys applied in reverse
+   order (K16 first, K1 last).
+
+1. Feistel structure
+   In each round the 64-bit block is split into a left half L and a right
+   half R (32 bits each):
+        L_i = R_(i-1)
+        R_i = L_(i-1) XOR F(R_(i-1), K_i)
+   Because the structure is self-inverting, F does not have to be invertible.
+
+2. General flow of DES
+   64-bit plaintext
+        |
+   Initial Permutation (IP)
+        |
+   Split into L0 (32) and R0 (32)
+        |
+   16 Feistel rounds (using K1 ... K16)
+        |
+   Swap the halves (32-bit swap: output is R16 || L16)
+        |
+   Final Permutation (FP = IP^-1)
+        |
+   64-bit ciphertext
+
+3. Initial and Final Permutation
+   IP is a fixed bit-reordering table applied before round 1; FP is its exact
+   inverse applied after round 16. They have no cryptographic strength
+   (the key is not involved) but were designed for hardware loading.
+
+4. Round function F (32-bit input R, 48-bit subkey K_i, 32-bit output)
+   a) Expansion (E-box): expands the 32-bit R to 48 bits by duplicating some
+      bits (each 4-bit group gets neighbouring bits on both sides). This
+      provides diffusion and matches the 48-bit key size.
+   b) Key mixing: the 48-bit result is XORed with the 48-bit round key K_i.
+   c) S-boxes (substitution): the 48 bits are split into eight 6-bit groups;
+      each passes through its own S-box (S1...S8), which maps 6 bits to
+      4 bits (outer two bits select the row, middle four bits select the
+      column of a 4x16 table). Output: 32 bits. S-boxes are the only
+      non-linear part of DES and provide confusion.
+   d) P-box permutation: the 32-bit S-box output is permuted by a fixed
+      table, spreading the bits to the inputs of different S-boxes in the next
+      round (diffusion).
+
+5. Diagram of ONE DES round
+
+        L(i-1) (32 bits)                    R(i-1) (32 bits)
+            |                                    |
+            |                         +----------+----------+
+            |                         |                     |
+            |                  +------v------+              |
+            |                  | Expansion E |              |
+            |                  |  32 -> 48   |              |
+            |                  +------+------+              |
+            |                         |                     |
+            |                       (XOR) <---- K(i) (48 bits, from key schedule)
+            |                         |                     |
+            |                  +------v------+              |
+            |                  | 8 S-boxes   |              |
+            |                  | 48 -> 32    |              |
+            |                  +------+------+              |
+            |                         |                     |
+            |                  +------v------+              |
+            |                  | P-box perm. |              |
+            |                  |  32 -> 32   |              |
+            |                  +------+------+              |
+            |                         |                     |
+            +----------(XOR)<---------+                     |
+                          |                                 |
+                          v                                 v
+                     R(i) = L(i-1) XOR F(...)           L(i) = R(i-1)
+
+6. Key schedule (generation of 16 round keys)
+   - Permuted Choice 1 (PC-1): the 64-bit key is reduced to 56 bits by
+     dropping the 8 parity bits and permuting the rest.
+   - The 56 bits are split into two 28-bit halves C0 and D0.
+   - In each round, both halves are rotated left circularly by 1 bit (rounds
+     1, 2, 9 and 16) or by 2 bits (all other rounds).
+   - Permuted Choice 2 (PC-2): the combined 56 bits (C_i || D_i) are
+     compressed/permuted to a 48-bit subkey K_i.
+   - Repeating this gives K1 ... K16. The rotations ensure that each round
+     uses a different subset of the key bits.
+
+Decryption: use the same circuit with the keys in order K16, K15, ..., K1.
+
+
+-----------------------------------------------------------------------------
+Q7. [Data Encryption Standard (DES)]                               [10 Marks]
+-----------------------------------------------------------------------------
+Discuss the strength and weaknesses of DES. Cover the avalanche effect, the
+issue of its short 56-bit key, brute-force attacks, and differential and
+linear cryptanalysis. Explain how Double DES and Triple DES (2-key and 3-key)
+were developed to overcome these weaknesses, and why Double DES is vulnerable
+to the meet-in-the-middle attack.
+
+ANSWER:
+
+A. Strengths of DES
+ - Avalanche effect: a change of one bit in the plaintext (or key) changes
+   about half (around 32) of the ciphertext bits after only a few rounds,
+   because of the expansion, S-box and P-box design. This hides statistical
+   relationships.
+ - Well-designed S-boxes: they are non-linear and were (as later revealed by
+   Coppersmith, IBM) designed to resist differential cryptanalysis, which was
+   not publicly known in the 1970s.
+ - Standardised, widely analysed for decades, with no practical structural
+   break found other than exhaustive key search.
+
+B. Weaknesses of DES
+ 1. Short key (56 bits): the key space is 2^56 (about 7.2 x 10^16 keys), too
+    small for modern computing.
+ 2. Brute-force attacks: DES Challenge II-2 was solved by distributed.net in
+    1998; the EFF "Deep Crack" machine (cost about US$250,000) found a key in
+    about 56 hours in 1998, and combined with distributed.net it took about
+    22 hours in 1999. Today, FPGA/GPU clusters can do it in hours or less.
+ 3. Complementation property: E_K(P) = C implies E_K'(P') = C' (complements),
+    which halves the effective brute-force work.
+ 4. Weak and semi-weak keys: a few keys (e.g. all 0s) give identical
+    subkeys, making encryption equal to decryption.
+ 5. Small 64-bit block: allows block-collision attacks with large data volumes.
+ 6. Differential cryptanalysis (Biham and Shamir, 1990): studies how
+    differences in plaintext pairs propagate through the rounds. Breaking
+    full 16-round DES needs about 2^47 chosen plaintexts, which is impractical
+    in real life, but it shows DES is not much more resistant than brute
+    force.
+ 7. Linear cryptanalysis (Matsui, 1993): finds linear approximations of the
+    S-boxes; breaks 16-round DES with about 2^43 known plaintext-ciphertext
+    pairs, the best theoretical attack on DES.
+
+C. Multiple encryption: Double DES and Triple DES
+
+ Double DES (2DES): C = E_K2( E_K1(P) ).  P = D_K1( D_K2(C) ).
+   Intention: effective key length 2 x 56 = 112 bits.
+   Reality: it is vulnerable to the meet-in-the-middle (MITM) attack, so it
+   gives only about 57 bits of security.
+
+ Meet-in-the-middle attack (Merkle and Hellman):
+   The attacker knows one pair (P, C). Then:
+     1. Encrypt P with all 2^56 possible values of K1 and store each result X
+        in a table, indexed by X.
+     2. Decrypt C with all 2^56 possible values of K2 and look up each result
+        in the table.
+     3. A match (E_K1(P) = D_K2(C)) gives a candidate key pair (K1, K2);
+        test candidates with a second known pair (P', C').
+   Cost: about 2^56 + 2^56 = 2^57 operations and 2^56 table entries, compared
+   with the expected 2^112. So 2DES is hardly stronger than DES.
+
+ Triple DES (3DES), Encrypt-Decrypt-Encrypt (EDE):
+   C = E_K3( D_K2( E_K1(P) ) )    P = D_K1( E_K2( D_K3(C) ) )
+   The middle step is a decryption so that if K1 = K2 = K3 the scheme is
+   backward compatible with single DES.
+
+   - 3-key 3DES: K1, K2, K3 are independent; key length 168 bits, but because
+     of the MITM attack the effective strength is about 112 bits. Considered
+     secure from a key-search point of view.
+   - 2-key 3DES: K1 = K3, K2 different; key length 112 bits, effective
+     strength about 80 bits (some chosen-plaintext attacks reduce it
+     further). Used in banking (ANSI X9.17, ISO 8732, PGP, S/MIME) as a
+     compromise.
+
+   Drawbacks of 3DES: three times slower than DES; still a 64-bit block
+   (Sweet32 birthday attack). NIST deprecated 3DES and recommends AES; 3DES
+   was disallowed for new use after 2023.
+
+
+-----------------------------------------------------------------------------
+Q8. [Advanced Encryption Standard (AES)]                           [10 Marks]
+-----------------------------------------------------------------------------
+Explain the Advanced Encryption Standard (AES). Describe its block size,
+supported key lengths (128, 192 and 256 bits) and the corresponding number of
+rounds. Explain the four round transformations (SubBytes, ShiftRows,
+MixColumns and AddRoundKey), the key expansion process, and how decryption
+differs from encryption. Compare AES with DES in terms of structure, security
+and performance.
+
+ANSWER:
+
+Overview: AES is the symmetric block cipher standardised by NIST in 2001
+(FIPS 197) after an open competition. It is based on the Rijndael cipher by
+Joan Daemen and Vincent Rijmen. It is NOT a Feistel cipher; it is a
+substitution-permutation network (SPN) in which all bytes of the state are
+changed in every round.
+
+Block size and key lengths:
+   - Block size is always 128 bits (16 bytes), arranged as a 4x4 matrix of
+     bytes called the State.
+   - Key size / number of rounds:
+        AES-128  : 128-bit key, 10 rounds, 44 words of round key (11 x 128)
+        AES-192  : 192-bit key, 12 rounds, 52 words (13 x 128)
+        AES-256  : 256-bit key, 14 rounds, 60 words (15 x 128)
+
+Overall encryption process:
+   Initial step : AddRoundKey (with round key 0)
+   Rounds 1 .. Nr-1 : SubBytes -> ShiftRows -> MixColumns -> AddRoundKey
+   Final round (Nr) : SubBytes -> ShiftRows -> AddRoundKey (no MixColumns)
+
+   Plaintext (128) -> AddRoundKey -> [SubBytes, ShiftRows, MixColumns,
+   AddRoundKey] x (Nr-1) -> [SubBytes, ShiftRows, AddRoundKey] -> Ciphertext
+
+The four round transformations:
+
+1. SubBytes (byte substitution - confusion)
+   Each byte of the State is replaced using a fixed 16x16 lookup table, the
+   S-box. The S-box is built from the multiplicative inverse in GF(2^8)
+   (with irreducible polynomial x^8 + x^4 + x^3 + x + 1) followed by an
+   affine transformation. It is non-linear and has no fixed points. Example:
+   byte 0x53 -> 0xED.
+
+2. ShiftRows (diffusion between columns)
+   Row 0 is not shifted; row 1 is rotated left by 1 byte; row 2 by 2 bytes;
+   row 3 by 3 bytes. This moves bytes between columns so that the next
+   MixColumns mixes bytes from different columns.
+
+3. MixColumns (diffusion within columns)
+   Each column (4 bytes) is multiplied by a fixed matrix over GF(2^8):
+        | 02 03 01 01 |
+        | 01 02 03 01 |
+        | 01 01 02 03 |
+        | 03 01 01 02 |
+   Each output byte depends on all four input bytes of that column. Together
+   with ShiftRows, after two rounds every output byte depends on every input
+   byte (full diffusion). It is omitted in the last round.
+
+4. AddRoundKey (key mixing)
+   The State is XORed bitwise with the 128-bit round key of that round. This
+   is the only step that uses the key; it makes the cipher key-dependent.
+
+Key expansion (key schedule):
+   The cipher key (4, 6 or 8 words of 32 bits) is expanded into
+   4 x (Nr + 1) words w[0..]. The first Nk words are the key itself. For each
+   later word w[i]:
+     - if i is a multiple of Nk: w[i] = w[i-Nk] XOR SubWord(RotWord(w[i-1]))
+       XOR Rcon[i/Nk]   (RotWord = rotate the word left by one byte;
+       SubWord = apply the S-box to each byte; Rcon = round constant);
+     - (AES-256 only) if i mod 8 = 4: apply SubWord to w[i-1] before the XOR;
+     - otherwise: w[i] = w[i-Nk] XOR w[i-1].
+   Each group of four words forms one 128-bit round key.
+
+Decryption:
+   Decryption uses the inverse transformations applied in reverse order with
+   the round keys in reverse order:
+        InvShiftRows (rotate rows right), InvSubBytes (inverse S-box),
+        AddRoundKey (XOR is its own inverse), InvMixColumns (multiply by the
+        inverse matrix 0E 0B 0D 09 ...).
+   Because AES is not a Feistel network, the decryption algorithm is
+   different from encryption (though an "equivalent inverse cipher" can
+   reuse the structure of encryption with modified round keys). Order for
+   each round: InvShiftRows -> InvSubBytes -> AddRoundKey -> InvMixColumns.
+
+Comparison of AES with DES:
+
+ Feature          | DES                              | AES
+ -----------------+----------------------------------+------------------------------
+ Year / standard  | 1977 (FIPS 46)                   | 2001 (FIPS 197)
+ Structure        | Feistel network                  | Substitution-permutation
+                  | (half block changed per round)   | network (entire block per round)
+ Block size       | 64 bits                          | 128 bits
+ Key size         | 56 bits effective (64 w/ parity) | 128, 192 or 256 bits
+ Rounds           | 16                               | 10, 12 or 14
+ Basic unit       | Bits (permutations, S-boxes)     | Bytes (GF(2^8) arithmetic)
+ S-boxes          | 8 S-boxes, 6 -> 4 bits           | One 8 -> 8 bit S-box
+ Decryption       | Same algorithm, reversed keys    | Separate inverse operations
+ Security         | Broken by brute force; weak to   | No practical attack on full
+                  | differential/linear attacks      | AES; large key space
+ Performance      | Slow in software; 3DES is 3x     | Fast in software; hardware
+                  | slower                           | support (AES-NI) on CPUs
+ Status           | Withdrawn (2005); 3DES           | Current worldwide standard
+                  | deprecated                       |
+
+Conclusion: AES has a larger block, much longer keys, better resistance to
+known cryptanalytic attacks and higher speed, so it has replaced DES and
+3DES in practically all modern applications (TLS, Wi-Fi WPA2/WPA3, disk
+encryption, VPNs).
+
+
+=============================================================================
+Reference books:
+1. William Stallings, "Cryptography and Network Security: Principles and
+   Practice", Pearson.
+2. Behrouz A. Forouzan, "Cryptography and Network Security", McGraw-Hill.
+3. NIST FIPS 46-3 (DES) and FIPS 197 (AES).
+=============================================================================

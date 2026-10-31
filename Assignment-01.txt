@@ -1,0 +1,145 @@
+Assignment-01
+
+Q1. (Short) Define cryptography in your own words. What are the three main goals it tries to achieve?
+
+Answer: Cryptography is the science of protecting information by converting it into a form that only authorised people can read or verify, using mathematical algorithms and secret keys. Its three main goals are confidentiality (only the intended receiver can read the message), integrity (the message cannot be changed without detection) and authentication (the identity of the sender or user is proved). Non-repudiation, where a sender cannot later deny sending a message, is often added as a fourth goal.
+
+
+Q2. (Short) Differentiate between plaintext and ciphertext with a simple example.
+
+Answer: Plaintext is the original, readable message that the sender wants to protect, while ciphertext is the unreadable, scrambled form produced after encryption. For example, if the plaintext HELLO is encrypted with a Caesar cipher that shifts every letter by 3 positions, the ciphertext becomes KHOOR.
+
+
+Q3. (Long) Explain the concept of cryptography in detail. Discuss why it is considered essential in the modern digital world, giving at least three real-life applications (e.g., banking, messaging apps, e-commerce).
+
+Answer:
+
+Concept: The word cryptography comes from the Greek kryptos (hidden) and graphein (to write). It is the practice of securing communication and data so that third parties cannot read or tamper with it. A cryptographic system has four basic parts:
+- Plaintext: the original readable data.
+- Encryption algorithm (cipher): the mathematical procedure that scrambles the data.
+- Key: the secret value that controls the algorithm. The same algorithm with a different key gives a different result.
+- Ciphertext: the unreadable output, which is turned back into plaintext by decryption with the correct key.
+
+Modern cryptography is wider than just secrecy. It also provides integrity checking (hash functions and MACs), authentication (certificates, digital signatures) and non-repudiation (digital signatures).
+
+Why it is essential today:
+- Almost all data now travels over networks such as the Internet and Wi-Fi, which anyone between the sender and receiver can potentially observe or modify.
+- Sensitive information such as passwords, card numbers, medical records and identity details must be protected from theft and misuse.
+- It builds trust. Users must be sure they are talking to the real bank or website and that the data was not altered on the way.
+- Laws and standards (for example the IT Act in India, GDPR and PCI-DSS) require organisations to protect personal and payment data, and encryption is the main technical control.
+
+Real-life applications:
+- Banking: Net banking and UPI apps use TLS (HTTPS) to encrypt the session. ATM PINs and card transactions are encrypted, and chip cards use cryptographic authentication so a copied card number alone is not enough to commit fraud.
+- Messaging apps: WhatsApp and Signal use end-to-end encryption (the Signal Protocol), so only the sender and receiver can read the chat. Even the service provider cannot.
+- E-commerce: Online shops use HTTPS and payment gateways that encrypt card details. Digital certificates prove that the website is genuine.
+- Others: Password storage (hashing), digital signatures on e-filed documents, VPNs for remote work, Wi-Fi security (WPA2/WPA3) and cryptocurrencies all depend on cryptography.
+
+Conclusion: Without cryptography, secure online banking, shopping and private communication would not be possible, which is why it is the foundation of digital trust.
+
+
+Q4. (Short) What is the difference between encryption and decryption?
+
+Answer: Encryption is the process of converting readable plaintext into unreadable ciphertext using an algorithm and a key. Decryption is the reverse process that converts the ciphertext back into the original plaintext using the correct key. For example, HELLO becomes KHOOR on encryption and KHOOR becomes HELLO on decryption. In symmetric systems the same key is used for both, while in asymmetric systems two different (related) keys are used.
+
+
+Q5. (Long) Describe the two major types of cryptography - Symmetric Key Cryptography and Asymmetric Key Cryptography. Compare them based on key usage, speed, security, and typical use cases. Support your answer with examples of algorithms under each type (e.g., AES, DES for symmetric; RSA, ECC for asymmetric).
+
+Answer:
+
+1. Symmetric Key Cryptography: The sender and receiver use the same secret key for both encryption and decryption. It works on blocks or streams of data using substitution and permutation operations, so it is very fast. Its main weakness is key distribution. The key must be shared secretly in advance, and a network of n users needs n(n-1)/2 separate keys. Examples: AES (128/192/256-bit keys, the current standard), DES (56-bit key, now insecure), 3DES, Blowfish and ChaCha20.
+
+2. Asymmetric Key Cryptography (public-key cryptography): Each user has a key pair, a public key that can be shared openly and a private key kept secret. Data encrypted with the public key can only be decrypted with the matching private key, and a signature made with the private key can be verified by anyone with the public key. This removes the need to share a secret in advance. Examples: RSA (based on the difficulty of factoring large numbers), ECC (elliptic curves), Diffie-Hellman key exchange and DSA/ECDSA.
+
+Comparison:
+- Key usage: Symmetric uses one shared secret key for encryption and decryption. Asymmetric uses a key pair (public key encrypts or verifies, private key decrypts or signs).
+- Speed: Symmetric is very fast and suitable for large amounts of data. Asymmetric is much slower because of heavy mathematical operations, so it is used for small data.
+- Security: Symmetric depends on keeping the single key secret and on key length (AES-256 is very strong), and key sharing is its weak point. Asymmetric depends on hard maths problems (factoring, discrete logarithm), needs no secret to be sent, but needs longer keys (RSA-2048 or more, ECC-256).
+- Key management: Symmetric is difficult for many users (n(n-1)/2 keys). Asymmetric is easier, as each user needs only one pair.
+- Services provided: Symmetric mainly gives confidentiality. Asymmetric gives confidentiality, authentication, digital signatures and non-repudiation.
+- Typical use cases: Symmetric is used for bulk data encryption, disk and file encryption, VPN and Wi-Fi traffic, and database encryption. Asymmetric is used for key exchange, digital signatures, SSL/TLS certificates and secure email (PGP).
+- Algorithms: Symmetric: AES, DES, 3DES, Blowfish, ChaCha20. Asymmetric: RSA, ECC, Diffie-Hellman, DSA.
+
+In practice both are combined (hybrid encryption). For example, in HTTPS the browser uses asymmetric cryptography (RSA or ECDHE) to agree on a session key safely, and then uses a symmetric cipher such as AES to encrypt the actual data quickly.
+
+
+Q6. (Short) What is hashing, and how is it different from encryption?
+
+Answer: Hashing converts data of any size into a fixed-length value called a hash or digest (for example, SHA-256 always gives 256 bits) using a one-way function. The original data cannot be recovered from the hash, and even a one-character change in the input produces a completely different hash. Encryption, in contrast, is two-way, because the ciphertext can be decrypted back to the plaintext with the correct key. Hashing is therefore used for integrity checks and password storage, while encryption is used to keep data confidential.
+
+
+Q7. (Short) Critically evaluate why achieving confidentiality, integrity and non-repudiation together is challenging in a real-world communication system.
+
+Answer: Each goal needs a different mechanism, and the mechanisms interact and sometimes conflict. Confidentiality needs encryption, integrity needs hashes or MACs, and non-repudiation needs digital signatures made with a private key that only the sender holds. A symmetric MAC cannot give non-repudiation because both parties know the key, so either could have created the message. Asymmetric signatures are needed, but they are slower and depend on a trusted certificate authority (PKI) to link a public key to a real identity.
+
+The order of operations also matters (sign-then-encrypt versus encrypt-then-sign can leave the system open to attacks). Non-repudiation is only as strong as the secrecy of the private key, because if it is stolen the owner can claim that someone else signed. Other practical problems include key management and revocation, trusted timestamps, performance overhead on slow devices, implementation bugs and side-channel attacks, and the conflict between accountability (a signature identifies the signer) and privacy or anonymity. Hence, achieving all three together requires careful protocol design and trusted infrastructure, not just strong algorithms.
+
+
+Q8. (Long) Explain the role of cryptography in network security. Discuss how it helps achieve confidentiality, integrity, authentication, and non-repudiation, with one example for each.
+
+Answer: Networks such as the Internet are open and untrusted, so data can be intercepted (eavesdropping), modified, replayed or sent by an attacker pretending to be someone else. Cryptography is the main tool used to counter these threats. It protects data in transit (TLS, IPSec, VPN, Wi-Fi), data at rest (disk and database encryption), and provides the identity proofs on which secure access depends. Its four main contributions are:
+
+- Confidentiality: Data is encrypted (for example with AES) so that an eavesdropper sees only ciphertext. Example: in HTTPS, the card number typed on a shopping site is AES-encrypted so it cannot be read on the network.
+- Integrity: A hash or HMAC is attached to the data. The receiver recomputes it and any change is detected. Example: a downloaded software file is verified against its published SHA-256 checksum, and TLS adds a MAC to every record.
+- Authentication: Users, servers or messages prove their identity using passwords (stored as hashes), digital certificates or challenge-response. Example: the browser checks the bank website's X.509 certificate, signed by a trusted CA, to confirm it is the genuine site.
+- Non-repudiation: A digital signature made with the sender's private key can be verified by anyone but created only by the owner. Example: a digitally signed e-contract or tax return cannot later be denied by the signer.
+
+In summary, cryptography turns an untrusted network into a trustworthy channel. Protocols such as SSL/TLS, IPSec, SSH and WPA3 combine encryption, hashing, key exchange and certificates to provide all four properties together.
+
+
+Q9. (Short) Name any two network security protocols that use cryptographic techniques and briefly state their purpose (e.g., SSL/TLS, IPSec).
+
+Answer:
+- SSL/TLS: Secures communication between a client and a server (for example HTTPS). It authenticates the server using certificates, agrees on keys using asymmetric cryptography, and protects the data with symmetric encryption and message authentication.
+- IPSec: Works at the network layer to secure IP packets between hosts or networks, and is widely used for VPNs. Its protocols (AH and ESP) provide integrity, authentication and encryption, and IKE is used for key exchange.
+
+
+Q10. (Long) Critically discuss the evolution of cryptography from classical ciphers to modern cryptographic systems, evaluating the impact of computational advances on cryptographic security.
+
+Answer:
+
+1. Classical era: Early ciphers such as the Caesar cipher (substitution) and the Spartan scytale (transposition) relied on the secrecy of the method and had very small key spaces. They were defeated by frequency analysis, described by the Arab scholar al-Kindi in the 9th century. Polyalphabetic ciphers such as Vigenere flattened letter frequencies but were broken in the 19th century by Kasiski's method.
+
+2. Mechanical and electro-mechanical era: Machines such as Enigma automated complex substitution with rotors and made manual codebreaking impractical. But weaknesses in the design and operating procedures, together with early computing devices (the Polish bomba, Turing's bombe and Colossus), led to their defeat. This showed that mechanical complexity alone is not security.
+
+3. Foundations of modern cryptography: Kerckhoffs' principle (1883) said a system should be secure even if everything except the key is public, and Claude Shannon's 1949 paper placed cryptography on a mathematical footing. Computers then allowed complex bit-level ciphers. DES (1977) became the first public standard, and public-key cryptography (Diffie-Hellman 1976, RSA 1977) solved the key distribution problem and enabled digital signatures.
+
+4. Modern systems: AES (2001) replaced DES. Hash functions moved from MD5 and SHA-1 to SHA-2 and SHA-3. Elliptic-curve cryptography gave shorter keys. Protocols such as TLS 1.3 combine these tools in one secure channel.
+
+Impact of computational advances:
+- Brute force became practical. The 56-bit DES key was cracked in 1998 by the EFF's special-purpose machine in about 56 hours, which led to 3DES and then AES with 128 to 256-bit keys. Faster CPUs, GPUs and ASICs force key lengths to grow over time (RSA-512 was factored in 1999 and RSA-768 in 2009, so RSA-2048 or more is recommended now).
+- Algorithms age. MD5 and SHA-1 suffered practical collision attacks and are no longer safe for signatures.
+- Quantum computing: Shor's algorithm (1994) could break RSA, DH and ECC on a large quantum computer, and Grover's algorithm halves the effective strength of symmetric keys (so AES-256 is preferred). NIST has standardised post-quantum algorithms (ML-KEM, ML-DSA and SLH-DSA, 2024), and "harvest now, decrypt later" attacks make early migration important.
+
+Critical evaluation: Modern cryptography is far stronger than classical ciphers because its security depends on a secret key and on well-studied mathematical problems rather than on secrecy of the algorithm. However, this security is conditional. It rests on assumptions (such as factoring being hard) that are unproven, and it must be re-evaluated as computing power grows. In practice, most real-world failures come from poor implementation, weak keys and key management (for example the Heartbleed bug in 2014) rather than from breaking the mathematics. Therefore cryptographic agility, the ability to replace algorithms and increase key sizes, is essential.
+
+
+Q11. (Long) Trace the historical development of cryptographic techniques, starting from classical methods (like the Caesar Cipher and Vigenere Cipher) through to modern computer-based cryptography (like DES, AES, RSA). Highlight key turning points such as World War II cryptography (Enigma machine) and the invention of public-key cryptography.
+
+Answer:
+
+Timeline of major developments:
+- c. 5th century BC: Spartan scytale, a transposition cipher using a rod of fixed diameter.
+- c. 1st century BC: Caesar cipher, where each letter is shifted by a fixed number (3). It is easy to break by trying all 25 shifts.
+- 9th century: Al-Kindi describes frequency analysis, the first general method of breaking substitution ciphers.
+- 1467 / 1553: Alberti's cipher disk and the Vigenere cipher (polyalphabetic, described by Bellaso in 1553), where different shifts are chosen by a keyword.
+- 1863 / 1883: Kasiski breaks Vigenere. Kerckhoffs states that security must rely only on the key.
+- 1918 to 1945: The Enigma rotor machine is patented (Scherbius, 1918) and used by Germany in WWII. It is broken by Polish mathematicians (1932) and Bletchley Park (Turing's bombe).
+- 1949: Claude Shannon's theory of secrecy systems gives cryptography its mathematical basis.
+- 1976 to 1977: Public-key cryptography arrives with Diffie-Hellman key exchange (1976) and the RSA algorithm (1977).
+- 1977: DES is adopted as the US encryption standard (56-bit key, from IBM's Lucifer).
+- 1990s: PGP (1991) brings public-key encryption to email, SSL secures web traffic, and DES is cracked (1998).
+- 2001: AES (Rijndael) is standardised by NIST as the replacement for DES.
+- 2015 to 2024: SHA-3 is standardised, elliptic-curve use grows, and NIST selects post-quantum algorithms (2024).
+
+Classical methods: Caesar and Vigenere ciphers illustrate the early ideas of substitution and a key. Example (Caesar, shift 3): ATTACK becomes DWWDFN. Example (Vigenere, key LEMON): the plaintext ATTACKATDAWN is encrypted to LXFOPVEFRNHR. The Vigenere cipher hid letter frequencies, so it was called "le chiffre indechiffrable" for about 300 years until it was broken.
+
+Turning point 1 - World War II and Enigma: Enigma used rotating wheels and a plugboard to give a huge number of settings, and the Germans believed it was unbreakable. Polish cryptologists (Rejewski, Zygalski and Rozycki) first broke it, and British codebreakers at Bletchley Park under Alan Turing built electro-mechanical machines (bombes) to find the daily keys. Intelligence from Enigma and the Lorenz cipher (broken with the Colossus computer) is credited with shortening the war. This work led directly to modern computing and to the importance of computer-aided cryptanalysis.
+
+Turning point 2 - Computers and public-key cryptography: After 1970 computers allowed strong bit-level ciphers. IBM's Lucifer became DES, the first widely adopted public standard, but its 56-bit key was eventually too short and AES replaced it in 2001. Still, symmetric ciphers needed a secure way to share keys. In 1976 Whitfield Diffie and Martin Hellman proposed public-key cryptography, and in 1977 Rivest, Shamir and Adleman created RSA, which supports both encryption and digital signatures. This opened the way to secure e-commerce, certificates, HTTPS and digital signatures.
+
+Conclusion: Cryptography has moved from hand-made ciphers based on secrecy of method, to machines, and then to computer-based algorithms based on mathematics and secret keys, with each advance in codebreaking driving a stronger design.
+
+
+Q12. (Short) Who introduced the concept of public-key cryptography, and in which year?
+
+Answer: Whitfield Diffie and Martin Hellman introduced public-key cryptography in 1976 in their paper "New Directions in Cryptography". The first practical public-key algorithm, RSA, followed in 1977 (Rivest, Shamir and Adleman). It was later revealed that British GCHQ researchers (Ellis, Cocks and Williamson) had discovered the idea secretly in the early 1970s.

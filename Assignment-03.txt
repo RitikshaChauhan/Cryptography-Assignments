@@ -1,0 +1,195 @@
+Assignment-03
+
+Q1. (Short) Define symmetric key cryptography. What is its main advantage and its main disadvantage?
+
+Answer: Symmetric key cryptography is a type of cryptography in which the same secret key is used for both encryption and decryption. Its main advantage is speed, because the operations are simple and suitable for encrypting large amounts of data. Its main disadvantage is the key-distribution problem: the sender and receiver must share the secret key safely in advance, and a network of n users needs n(n-1)/2 keys.
+
+
+Q2. (Short) Differentiate between a block cipher and a stream cipher with one example of each.
+
+Answer: A block cipher encrypts data in fixed-size blocks (for example 64 or 128 bits at a time) using the same key for every block. Example: AES (128-bit block). A stream cipher encrypts data one bit or one byte at a time by combining it (usually with XOR) with a keystream generated from the key. Example: RC4 or ChaCha20. Block ciphers need a mode of operation and padding for long messages, whereas stream ciphers are well suited to continuous data such as voice and live traffic.
+
+
+Q3. (Long) Explain the principles of symmetric cryptography with a neat model. Discuss its advantages, disadvantages and applications.
+
+Answer:
+
+Principle: In symmetric cryptography the sender and the receiver agree on one secret key K beforehand. The sender converts the plaintext P into ciphertext C with the encryption algorithm E and the key K, that is C = E(K, P). The receiver recovers the plaintext using the decryption algorithm D and the same key, that is P = D(K, C). The algorithm is public, and the security depends only on the secrecy and the length of the key (Kerckhoffs' principle).
+
+Model:
+
+   Plaintext (P)                                                    Plaintext (P)
+        |                                                                ^
+        v                                                                |
+   [ Encryption  ]---- Ciphertext (C) ---- insecure channel ----> [ Decryption  ]
+   [ algorithm E ]                                                 [ algorithm D ]
+        ^                                                                ^
+        |                                                                |
+        +----------------- same secret key K (shared securely) ----------+
+
+Basic techniques used in symmetric ciphers:
+- Substitution: replacing symbols or bits with others.
+- Transposition (permutation): rearranging the positions of symbols or bits.
+- Confusion and diffusion (Shannon): confusion hides the relation between the key and the ciphertext; diffusion spreads the effect of one plaintext bit over many ciphertext bits. Modern ciphers repeat substitution and permutation for several rounds.
+
+Advantages:
+- Very fast and efficient in software and hardware.
+- Requires less computing power, so it is suitable for large files and mobile devices.
+- Strong security with comparatively short keys (AES-128 is considered secure).
+
+Disadvantages:
+- Key-distribution problem: the key has to be shared secretly.
+- Many keys are needed for many users: n(n-1)/2.
+- Does not provide non-repudiation, because both parties have the same key and either could have created the message.
+- If the key is stolen, all past and future messages protected by it are exposed.
+
+Applications: encrypting files and hard disks, databases, Wi-Fi security (WPA2/WPA3 use AES), VPN data traffic, and the bulk-data encryption stage of HTTPS/TLS (after the session key is agreed with public-key cryptography).
+
+
+Q4. (Short) Explain the Caesar cipher with its encryption and decryption formula. Encrypt the word "ATTACK" with a key of 3.
+
+Answer: The Caesar cipher is a monoalphabetic substitution cipher in which every letter of the plaintext is shifted by a fixed number k of positions in the alphabet (A = 0, B = 1, ..., Z = 25). Encryption: C = (P + k) mod 26. Decryption: P = (C - k) mod 26. For ATTACK with k = 3: A becomes D, T becomes W, T becomes W, A becomes D, C becomes F, K becomes N, so the ciphertext is DWWDFN. It is very weak because there are only 25 possible keys, which can all be tried quickly.
+
+
+Q5. (Long) Describe the classical symmetric encryption techniques (Caesar, monoalphabetic, Playfair, Vigenere and rail fence ciphers) with examples. Why are they not secure today?
+
+Answer: Classical ciphers use simple substitution and/or transposition operations on letters.
+
+1. Caesar cipher (shift cipher): Each letter is shifted by a fixed key k. Example: with k = 3, HELLO becomes KHOOR. Only 25 keys, so brute force breaks it instantly.
+
+2. Monoalphabetic substitution cipher: Each plaintext letter is replaced by a fixed, randomly chosen different letter, so the key is a permutation of the 26 letters, giving 26! (about 4 x 10^26) possible keys. Although the key space is huge, it can be broken by frequency analysis, because the letter frequencies of the language (E, T, A in English) remain visible in the ciphertext.
+
+3. Playfair cipher (Wheatstone, popularised by Playfair, 1854): It is a digraph (two-letter) substitution cipher that uses a 5 x 5 square built from a keyword (I and J share a cell). The plaintext is split into pairs of letters, and for each pair:
+   - if both letters are in the same row, each is replaced by the letter to its right,
+   - if both are in the same column, each is replaced by the letter below it,
+   - otherwise each is replaced by the letter in its own row but in the column of the other letter (rectangle rule).
+   A filler letter such as X is inserted between double letters. Because it encrypts pairs, it hides single-letter frequencies, but digraph frequencies can still be analysed.
+
+4. Vigenere cipher: A polyalphabetic cipher in which a repeating keyword decides a different Caesar shift for each letter. Encryption: C = (P + K) mod 26 using the key letter in turn. Example: plaintext ATTACKATDAWN with keyword LEMON gives the ciphertext LXFOPVEFRNHR. The same plaintext letter is encrypted to different letters, which hides frequencies. It was broken by Kasiski's method (1863), which finds the key length from repeated patterns.
+
+5. Rail fence cipher (transposition): The plaintext is written diagonally in a zig-zag over a number of rows (rails) and then read row by row. Example with 2 rails: HELLOWORLD is written with H, L, O, O, L on the first rail and E, L, W, R, D on the second rail, giving the ciphertext HLOOLELWRD. The letters are not changed, only rearranged, so letter frequencies are unchanged and it is easy to break by trying a few rail counts.
+
+Why they are insecure today:
+- Small key space (Caesar) or an easily visible statistical pattern (frequency analysis, digraph and key-length analysis).
+- They work only on letters and lack the confusion and diffusion of modern ciphers.
+- Computers can try all keys or analyse the text in a fraction of a second.
+They are still studied because they show the basic ideas (substitution, transposition, key) that modern ciphers combine and repeat in many rounds.
+
+
+Q6. (Short) Briefly describe the historical development of symmetric encryption algorithms.
+
+Answer: Symmetric encryption began with simple manual ciphers such as the scytale and the Caesar cipher, followed by polyalphabetic ciphers (Vigenere, 16th century) and mechanical rotor machines such as Enigma in the 20th century. In 1949 Claude Shannon gave the theory of secrecy, and in the 1970s IBM's Lucifer led to the Data Encryption Standard (DES, 1977), the first public computer-based standard. When DES became too weak (cracked in 1998), 3DES was used temporarily and then AES (Rijndael) became the standard in 2001. Newer designs such as ChaCha20 are now also widely used.
+
+
+Q7. (Long) Explain the structure and working of the Data Encryption Standard (DES). Also mention its weaknesses.
+
+Answer:
+
+Basic features: DES is a symmetric block cipher based on the Feistel structure. It encrypts a 64-bit block of plaintext into a 64-bit block of ciphertext using a 64-bit key, of which 8 bits are parity bits, so the effective key length is 56 bits. It uses 16 rounds, and each round uses a different 48-bit subkey.
+
+Working (encryption):
+
+   64-bit plaintext
+        |
+   Initial Permutation (IP)
+        |
+   split into L0 (32 bits) and R0 (32 bits)
+        |
+   16 rounds:   Li = R(i-1)
+                Ri = L(i-1) XOR f( R(i-1), Ki )
+        |
+   swap L16 and R16
+        |
+   Final Permutation (IP inverse)
+        |
+   64-bit ciphertext
+
+The round function f:
+1. Expansion (E-box): the 32-bit right half is expanded to 48 bits.
+2. Key mixing: the 48 bits are XORed with the 48-bit round subkey Ki.
+3. Substitution (S-boxes): the result is divided into eight 6-bit groups, and each group goes through one of eight S-boxes that converts 6 bits to 4 bits, giving 32 bits. The S-boxes are the only non-linear part and give confusion.
+4. Permutation (P-box): the 32 bits are permuted to give diffusion.
+
+Key schedule: The 64-bit key goes through Permuted Choice 1 (PC-1), which drops the parity bits and gives 56 bits. These are split into two 28-bit halves, and in each round both halves are rotated left by 1 or 2 bits (1 bit in rounds 1, 2, 9 and 16, otherwise 2 bits). Permuted Choice 2 (PC-2) then selects 48 bits, producing the subkey K1 to K16.
+
+Decryption: The same algorithm is used, but the subkeys are applied in the reverse order (K16 to K1). This is a useful property of the Feistel structure.
+
+Weaknesses of DES:
+- The 56-bit key is too short: there are 2^56 (about 7.2 x 10^16) keys. In 1998 the EFF's "Deep Crack" machine found a key in about 56 hours, and today it can be done in hours or less.
+- Vulnerable to differential and linear cryptanalysis (although it resists differential cryptanalysis well, as designed).
+- The small 64-bit block size has issues with large amounts of data.
+- Four weak keys and several semi-weak keys exist.
+Improvement: Triple DES (3DES) applies DES three times, in encrypt-decrypt-encrypt (EDE) form, with two or three keys, giving 112-bit or 168-bit key lengths. It is much stronger but three times slower, and it has been replaced by AES.
+
+
+Q8. (Short) What is a Feistel cipher structure?
+
+Answer: A Feistel cipher splits the plaintext block into a left half (L) and a right half (R) and processes them for several rounds. In each round the new left half is the old right half, and the new right half is the old left half XORed with a round function applied to the old right half and the round key: Li = R(i-1) and Ri = L(i-1) XOR F(R(i-1), Ki). Its main advantage is that the round function F need not be invertible, and decryption uses the same structure with the subkeys in reverse order. DES is the best-known example.
+
+
+Q9. (Long) Explain the Advanced Encryption Standard (AES): its block and key sizes, number of rounds, and the operations performed in each round.
+
+Answer:
+
+Overview: AES is a symmetric block cipher selected by NIST in 2001 (FIPS 197) after an open competition. It is based on the Rijndael cipher by Joan Daemen and Vincent Rijmen. Unlike DES, it is not a Feistel cipher but a substitution-permutation network (SPN), and it processes the whole block in each round.
+
+Parameters:
+- Block size: 128 bits (16 bytes), arranged as a 4 x 4 matrix of bytes called the state.
+- Key size: 128, 192 or 256 bits.
+- Number of rounds: 10 for a 128-bit key, 12 for a 192-bit key, 14 for a 256-bit key.
+- Round keys: derived from the cipher key by the key expansion (key schedule): 11, 13 or 15 round keys of 128 bits.
+
+Encryption process:
+
+   Plaintext (128 bits) -> State (4 x 4 bytes)
+        |
+   AddRoundKey (initial)
+        |
+   Rounds 1 to Nr-1 (each round):
+        SubBytes -> ShiftRows -> MixColumns -> AddRoundKey
+        |
+   Final round (round Nr):
+        SubBytes -> ShiftRows -> AddRoundKey     (no MixColumns)
+        |
+   Ciphertext (128 bits)
+
+The four operations:
+1. SubBytes: Each byte of the state is replaced using a fixed 16 x 16 lookup table (the S-box), which is based on the multiplicative inverse in the finite field GF(2^8) followed by an affine transformation. It gives non-linearity (confusion).
+2. ShiftRows: The rows of the state are shifted cyclically to the left: row 0 by 0 bytes, row 1 by 1 byte, row 2 by 2 bytes and row 3 by 3 bytes. This moves bytes between columns.
+3. MixColumns: Each column is treated as a polynomial and multiplied by a fixed matrix over GF(2^8), so each output byte depends on all four input bytes of the column. Together with ShiftRows, it provides diffusion. This step is left out in the last round.
+4. AddRoundKey: The state is XORed bit by bit with the 128-bit round key for that round. It is the only step that uses the key.
+
+Decryption: It uses the inverse operations (InvShiftRows, InvSubBytes, AddRoundKey, InvMixColumns) in reverse order with the round keys in reverse order.
+
+Strengths: Fast on software and hardware (and many CPUs have AES instructions), a clean mathematical design, no practical attack better than brute force on the full cipher, and a large key space (2^128 or more). It is used in Wi-Fi (WPA2/WPA3), HTTPS/TLS, VPNs, disk encryption and file protection.
+
+
+Q10. (Short) Compare DES and AES.
+
+Answer:
+- Block size: DES 64 bits; AES 128 bits.
+- Key size: DES 56 bits (64 with parity); AES 128, 192 or 256 bits.
+- Structure: DES is a Feistel cipher; AES is a substitution-permutation network.
+- Rounds: DES 16; AES 10, 12 or 14 depending on the key size.
+- Security: DES is insecure (broken by brute force in 1998); AES is secure and is the current standard.
+- Speed: AES is faster and more efficient in both software and hardware.
+- Year: DES 1977; AES 2001.
+
+
+Q11. (Long) What are block cipher modes of operation? Explain ECB, CBC and CTR modes with their advantages and disadvantages.
+
+Answer: A block cipher such as DES or AES can encrypt only one fixed-size block at a time. A mode of operation defines how the cipher is used repeatedly to encrypt messages longer than one block, and how to hide patterns in the data. Padding is added if the last block is incomplete.
+
+1. ECB (Electronic Codebook): Each plaintext block is encrypted separately with the same key: Ci = E(K, Pi).
+   Advantages: simple, fast, blocks can be encrypted or decrypted in parallel, and an error affects only one block.
+   Disadvantages: identical plaintext blocks give identical ciphertext blocks, so patterns in the data remain visible (for example the outline of an image encrypted in ECB can still be seen), and blocks can be rearranged or replayed by an attacker. ECB is not recommended for general use.
+
+2. CBC (Cipher Block Chaining): Each plaintext block is XORed with the previous ciphertext block before it is encrypted: Ci = E(K, Pi XOR C(i-1)), with C0 = a random Initialisation Vector (IV).
+   Advantages: the same plaintext block gives different ciphertext in different positions, so patterns are hidden; widely used.
+   Disadvantages: encryption cannot be parallelised (decryption can); an error in a ciphertext block corrupts that block and the next one; it needs a random, unpredictable IV and padding, and can be attacked if used incorrectly (padding-oracle attacks).
+
+3. CTR (Counter mode): The block cipher encrypts a counter value (nonce + counter), and the result is XORed with the plaintext, so the block cipher works like a stream cipher: Ci = Pi XOR E(K, nonce || counter_i).
+   Advantages: fully parallel for both encryption and decryption, random access to any block, no padding required, and only the encryption function is needed.
+   Disadvantages: a nonce/counter value must never be reused with the same key, because reuse reveals the XOR of two plaintexts; it gives no integrity by itself.
+
+Modern practice: Use authenticated modes such as AES-GCM (which is built on counter mode), which provide both confidentiality and integrity, and avoid ECB.

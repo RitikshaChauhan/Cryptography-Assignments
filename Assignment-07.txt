@@ -1,0 +1,500 @@
+Assignment-07
+=============================================================================
+Introduction to Network Security and Cryptography in Network Security
+Subject: Cryptography and Network Security (BCA309T)
+=============================================================================
+
+
+-----------------------------------------------------------------------------
+Q1.
+-----------------------------------------------------------------------------
+Define network security and explain its fundamental principles and objectives.
+Discuss the importance of confidentiality, integrity, availability,
+authentication, and authorization in securing network systems.
+
+ANSWER:
+
+Definition
+Network security is the set of policies, practices, technologies and devices
+used to protect the usability, reliability, integrity and safety of a computer
+network and the data travelling through it. It aims to prevent unauthorized
+access, misuse, modification, destruction or disclosure of network resources
+and data. It combines hardware (firewalls, routers, IDS/IPS), software
+(antivirus, VPN clients, patches), cryptography and administrative controls
+(policies, training).
+
+Fundamental principles and objectives
+ 1. Protect data in transit and at rest from eavesdropping and tampering.
+ 2. Allow only legitimate users and devices to use network resources.
+ 3. Keep the network and services available for authorized users.
+ 4. Detect, respond to and recover from attacks quickly.
+ 5. Apply defence in depth (multiple layers), least privilege (give only the
+    minimum access needed), separation of duties and fail-safe defaults.
+
+The CIA triad plus authentication and authorization
+
+ 1. Confidentiality - information is disclosed only to authorized parties.
+    Importance: protects passwords, banking details, personal and business
+    data from sniffing and leaks.
+    Mechanisms: encryption (AES, TLS, IPsec VPN), access control, data
+    classification.
+    Example: HTTPS prevents someone on public Wi-Fi from reading a login page.
+
+ 2. Integrity - data is accurate and has not been altered by unauthorized
+    persons during storage or transmission.
+    Importance: a changed bank transfer amount or tampered software update can
+    cause large damage.
+    Mechanisms: hash functions (SHA-256), MAC/HMAC, digital signatures,
+    checksums, version control.
+    Example: a downloaded file's SHA-256 hash is compared with the published
+    value.
+
+ 3. Availability - systems, services and data are accessible when needed by
+    authorized users.
+    Importance: downtime of banking, hospital or e-commerce services causes
+    financial and safety loss.
+    Mechanisms: redundancy, load balancing, backups, DDoS protection, UPS,
+    patch management, disaster recovery plans.
+    Example: a DDoS attack attacks availability.
+
+ 4. Authentication - verifying the claimed identity of a user, device or
+    message source ("Who are you?").
+    Factors: something you know (password, PIN), something you have (OTP
+    token, smart card, phone), something you are (fingerprint, face).
+    Mechanisms: passwords, multi-factor authentication (MFA), digital
+    certificates, Kerberos, biometrics.
+    Importance: stops impersonation and spoofing.
+
+ 5. Authorization - deciding what an authenticated user is allowed to do
+    ("What can you do?"), i.e. permissions and privileges.
+    Mechanisms: access control lists (ACL), role-based access control (RBAC),
+    least privilege, firewalls rules, file permissions.
+    Example: a student account can read course material but not change
+    grades.
+    Authentication always comes before authorization.
+
+Related objectives: non-repudiation (sender cannot deny sending, via digital
+signatures), accountability/auditing (logs), and privacy.
+
+Diagram:
+                      +-------------------+
+                      |  Network Security |
+                      +---------+---------+
+          +----------+----------+----------+-----------+
+          |          |          |          |           |
+   Confidentiality Integrity Availability Authentication Authorization
+   (secrecy)     (no change) (always up) (who are you?)  (what can you do?)
+
+
+-----------------------------------------------------------------------------
+Q2.
+-----------------------------------------------------------------------------
+Explain the threat landscape in network security. Discuss different types of
+network attacks and vulnerabilities, along with suitable examples and
+preventive measures.
+
+ANSWER:
+
+Threat landscape
+The threat landscape is the overall set of threats, threat actors,
+vulnerabilities and attack methods that can affect networks. Threat actors
+include script kiddies, hacktivists, cybercriminals, insiders (employees),
+organised groups and state-sponsored attackers (Advanced Persistent Threats,
+APT). Motives: money, espionage, disruption, revenge and ideology. The
+landscape keeps changing with cloud, IoT, remote work, mobile devices and AI,
+which enlarge the attack surface.
+
+Types of attacks
+ A. Passive attacks (do not alter data; hard to detect, so prevent with
+    encryption): eavesdropping/sniffing (e.g. Wireshark on open Wi-Fi) and
+    traffic analysis.
+ B. Active attacks (modify data or disrupt service): masquerade, replay,
+    modification, denial of service.
+
+ Specific attacks, examples and preventive measures:
+
+ 1. Malware (virus, worm, trojan, ransomware, spyware, botnets)
+    Example: WannaCry ransomware (2017) spread by an SMB vulnerability.
+    Prevention: antivirus/EDR, patching, backups, email filtering, restricted
+    privileges.
+
+ 2. Phishing and social engineering (spear phishing, vishing, pretexting)
+    Example: fake bank e-mail asking for OTP.
+    Prevention: user training, spam filters, MFA, DMARC/SPF/DKIM, verifying
+    links.
+
+ 3. Denial of Service (DoS) / Distributed DoS (DDoS)
+    Floods a server/link (SYN flood, UDP flood, DNS amplification) to make it
+    unavailable. Example: Mirai botnet (2016).
+    Prevention: rate limiting, firewalls, CDN/DDoS scrubbing services, load
+    balancers, redundancy.
+
+ 4. Man-in-the-Middle (MITM) and session hijacking
+    Attacker secretly relays and alters communication (rogue Wi-Fi, ARP
+    poisoning, SSL stripping).
+    Prevention: TLS with certificate validation, HSTS, VPN, secure cookies,
+    dynamic ARP inspection.
+
+ 5. Spoofing: IP spoofing, ARP spoofing, DNS spoofing/cache poisoning, MAC
+    spoofing, e-mail spoofing.
+    Prevention: ingress/egress filtering, DNSSEC, port security, authentication
+    of packets (IPsec).
+
+ 6. Sniffing / packet capture on unencrypted protocols (HTTP, FTP, Telnet).
+    Prevention: use HTTPS, SSH, SFTP, VPN; switched networks.
+
+ 7. Password attacks: brute force, dictionary, credential stuffing, rainbow
+    tables.
+    Prevention: strong passwords, salted slow hashing, account lockout, MFA.
+
+ 8. Application-layer attacks: SQL injection, cross-site scripting (XSS),
+    CSRF, buffer overflow, directory traversal.
+    Prevention: input validation, prepared statements, WAF, secure coding,
+    regular testing.
+
+ 9. Replay attack: a valid captured message is re-sent later.
+    Prevention: timestamps, nonces, sequence numbers, session tokens.
+
+10. Insider threats: employees misusing access.
+    Prevention: least privilege, monitoring and logging, separation of duties.
+
+11. Zero-day exploits and APTs: exploits of unknown vulnerabilities and long,
+    stealthy intrusions.
+    Prevention: defence in depth, network segmentation, threat intelligence,
+    IDS/IPS, zero-trust approach.
+
+12. Wireless attacks: rogue access points, evil twin, WEP/WPS cracking.
+    Prevention: WPA3/WPA2-AES, disable WPS, wireless IDS.
+
+Common vulnerabilities
+ - Unpatched operating systems and applications.
+ - Weak, default or reused passwords.
+ - Misconfigured firewalls, open ports and services, cloud storage left
+   public.
+ - Unencrypted protocols and weak ciphers.
+ - Lack of input validation in software (SQL injection, buffer overflow).
+ - Poor physical security and lack of user awareness.
+ - Unmanaged IoT/BYOD devices; third-party and supply-chain weaknesses.
+
+General preventive measures
+ Firewalls and network segmentation (DMZ, VLANs); IDS/IPS; VPN and encryption;
+ timely patch management; vulnerability scanning and penetration testing;
+ MFA and strong access control; logging/monitoring (SIEM); regular backups and
+ incident-response plan; security awareness training; zero-trust model.
+
+
+-----------------------------------------------------------------------------
+Q3.
+-----------------------------------------------------------------------------
+Discuss the legal and ethical considerations in network security. Explain the
+importance of data privacy, responsible security testing, authorized access,
+and compliance with applicable cybersecurity laws.
+
+ANSWER:
+
+Network security professionals have powerful skills and access to sensitive
+data, so their work is limited by laws (what they MUST or MUST NOT do) and by
+ethics (what they SHOULD do).
+
+1. Data privacy
+   - Organizations collect personal data (names, Aadhaar/ID numbers, health and
+     financial data); it must be collected lawfully, used only for the stated
+     purpose, stored securely, kept only as long as needed, and shared only
+     with consent or legal basis.
+   - Principles: lawfulness and consent, purpose limitation, data
+     minimisation, accuracy, storage limitation, security, accountability.
+   - Technical controls: encryption, access control, anonymisation/
+     pseudonymisation, logging, breach notification.
+   - Importance: prevents identity theft, protects individual rights and
+     builds user trust; breaches lead to fines and loss of reputation.
+
+2. Responsible (ethical) security testing
+   - Penetration testing and vulnerability assessment are legal only when done
+     with written permission (scope, targets, time window, rules of
+     engagement, and a non-disclosure agreement).
+   - Ethical hackers ("white hat") must stay within scope, avoid damaging or
+     disrupting systems, avoid accessing or copying real personal data more
+     than necessary, document findings and report them promptly and
+     confidentially.
+   - Responsible disclosure: report a found vulnerability to the owner/vendor
+     privately, give time to fix it (e.g. 90 days), and do not publish exploit
+     details before a patch. Bug bounty programmes provide legal channels.
+   - "Black hat" (malicious) and "grey hat" (unauthorized, though well
+     meaning) testing is illegal.
+
+3. Authorized access
+   - Accessing a computer, network or data without permission, or exceeding
+     the permission given, is a crime in almost every country.
+   - Authorization must be based on roles and need-to-know, with strong
+     authentication, logs and audits; administrators must not misuse
+     privileged access (e.g. reading employees' mail without legal basis).
+   - Sniffing, scanning or cracking passwords on networks that you do not own
+     or have no permission for is illegal, even without bad intention.
+
+4. Compliance with cybersecurity laws and standards
+   India:
+    - Information Technology Act, 2000 (amended 2008): Section 43
+      (unauthorized access, damage, data theft - compensation), Section 66
+      (computer-related offences, imprisonment/fine), 66C (identity theft),
+      66D (cheating by personation using computer), 66F (cyber terrorism),
+      Section 67 (obscene content), Section 69 (government interception and
+      monitoring powers), Section 72 (breach of confidentiality and privacy),
+      and Section 43A/ reasonable security practices.
+    - CERT-In Directions (2022): cyber incidents must be reported to CERT-In
+      within 6 hours of noticing; logs must be kept for 180 days.
+    - Digital Personal Data Protection Act, 2023 (DPDP Act): consent-based
+      processing of digital personal data, duties of data fiduciaries, rights
+      of data principals, penalties for breaches (very large fines).
+   International:
+    - GDPR (EU) - strict privacy and breach-notification rules with heavy fines
+      (up to 4% of global turnover).
+    - HIPAA (health data, USA), PCI DSS (payment card security standard),
+      CFAA (Computer Fraud and Abuse Act, USA), Budapest Convention on
+      Cybercrime.
+   Standards/frameworks: ISO/IEC 27001, NIST Cybersecurity Framework, SOC 2.
+   Importance of compliance: avoids penalties and legal action, protects
+   customers, enables international business, and gives a baseline of good
+   practice. Organizations should perform audits and keep documented
+   policies and incident response plans.
+
+Ethical principles (e.g. ACM/(ISC)2 codes): act honestly and in public
+interest, respect privacy and confidentiality, do no harm, obtain permission
+before testing, avoid conflicts of interest, maintain competence, and report
+vulnerabilities and incidents responsibly.
+
+
+-----------------------------------------------------------------------------
+Q4.
+-----------------------------------------------------------------------------
+Explain the role of cryptography in securing network communications. Describe
+the working and security features of SSL/TLS and IPsec protocols.
+
+ANSWER:
+
+Role of cryptography in network security
+Cryptography turns insecure networks (like the Internet) into secure channels:
+ - Confidentiality: symmetric encryption (AES, ChaCha20) hides data.
+ - Integrity: hash functions and MACs (SHA-256, HMAC, AEAD modes like GCM)
+   detect modification.
+ - Authentication: digital signatures, certificates and challenge-response
+   prove the identity of parties.
+ - Key exchange: Diffie-Hellman/ECDH and RSA let strangers agree on keys.
+ - Non-repudiation: digital signatures.
+ - Protection against replay: nonces, sequence numbers, timestamps.
+Network protocols apply these at different layers: TLS at the transport/
+application layer, IPsec at the network layer, WPA2/3 at the link layer.
+
+A. SSL/TLS (Secure Sockets Layer / Transport Layer Security)
+   SSL was designed by Netscape (SSL 3.0, 1996) and standardised as TLS by the
+   IETF (TLS 1.0 in 1999, 1.2 in 2008, 1.3 in 2018, RFC 8446). SSL and early
+   TLS (1.0/1.1) are obsolete; use TLS 1.2 or TLS 1.3. TLS runs above TCP and
+   protects application protocols such as HTTPS (port 443), SMTPS, IMAPS,
+   FTPS, etc.
+
+   Structure:
+     Application (HTTP) -> [ TLS Handshake | Alert | Change Cipher Spec |
+     Application Data ] -> TLS Record Protocol (fragmentation, MAC/AEAD,
+     encryption) -> TCP -> IP
+
+   Working (handshake, simplified TLS 1.2/1.3):
+     1. ClientHello: client sends supported TLS versions, cipher suites, a
+        random number (and, in TLS 1.3, its key share for ECDHE).
+     2. ServerHello: server chooses version and cipher suite, sends its random
+        value (and key share).
+     3. Server authentication: server sends its X.509 certificate chain; the
+        client validates it (trusted CA, validity period, domain name,
+        revocation status) and the server proves possession of its private key
+        (signature).
+     4. Key exchange: a shared secret is created by ephemeral Diffie-Hellman
+        (ECDHE), or in TLS 1.2 optionally by RSA key transport.
+     5. Key derivation: both sides derive symmetric session keys from the
+        shared secret and the random values (HKDF/PRF).
+     6. Finished messages: each side sends a MAC of the whole handshake to
+        confirm that nothing was tampered with.
+     7. Application data: protected with the symmetric cipher and AEAD
+        (e.g. AES-256-GCM, ChaCha20-Poly1305).
+
+     Client                                         Server
+       |--- ClientHello (ciphers, random, key share) -->|
+       |<-- ServerHello, Certificate, signature, -------|
+       |    key share, Finished                         |
+       |--- Finished (keys derived on both sides) ----->|
+       |<========= Encrypted application data =========>|
+
+   Security features:
+     - Server authentication (and optional client authentication) using
+       certificates; protection against impersonation and MITM.
+     - Confidentiality by symmetric encryption; integrity by MAC/AEAD.
+     - Forward secrecy with ephemeral (EC)DHE keys: recorded traffic cannot be
+       decrypted later even if the server's private key is stolen (always in
+       TLS 1.3).
+     - Protection against replay and tampering using sequence numbers and
+       handshake verification; downgrade protection.
+     - TLS 1.3 improvements: only 1 round trip (faster), removed weak
+       algorithms (RC4, 3DES, SHA-1, static RSA, CBC), encrypted handshake
+       messages, optional 0-RTT resumption.
+
+B. IPsec (Internet Protocol Security)
+   IPsec is a suite of protocols (RFC 4301 and others) that secures IP traffic
+   at the network layer, so all applications are protected transparently. It
+   is mainly used for VPNs (site-to-site and remote access). It provides
+   confidentiality, integrity, data origin authentication, anti-replay
+   protection and access control.
+
+   Main components:
+     1. Authentication Header (AH, protocol 51): integrity and authentication
+        of the entire IP packet (including immutable header fields) and anti-
+        replay; no encryption. Not compatible with NAT.
+     2. Encapsulating Security Payload (ESP, protocol 50): encryption plus
+        optional authentication/integrity and anti-replay of the payload
+        (most commonly used; works with NAT using NAT-T on UDP 4500).
+     3. Security Association (SA): a one-way logical agreement defining the
+        algorithms, keys, lifetime and a Security Parameter Index (SPI);
+        stored in the Security Association Database (SAD). The Security Policy
+        Database (SPD) says which traffic is protected.
+     4. Internet Key Exchange (IKEv1/IKEv2, UDP 500): authenticates the peers
+        (pre-shared key or certificates), negotiates the SAs and exchanges keys
+        using Diffie-Hellman.
+
+   Modes of operation:
+     - Transport mode: only the payload (data) of the IP packet is protected;
+       original IP header is kept. Used for host-to-host communication.
+     - Tunnel mode: the entire original IP packet is encrypted/authenticated
+       and encapsulated in a new IP packet with a new header. Used for
+       gateway-to-gateway VPNs, hiding the internal addresses.
+
+        Tunnel mode ESP packet:
+        [ New IP header | ESP header | Original IP header + Data | ESP trailer | ESP auth ]
+                                      <------- encrypted ------->
+                                      <----------- authenticated ----------->
+
+   Working: (1) interesting traffic matches the policy; (2) IKE phase 1 sets
+   up a secure, authenticated channel; (3) IKE phase 2 (child SA) negotiates
+   IPsec SAs; (4) data is sent protected with ESP/AH; (5) SAs are re-keyed or
+   deleted on expiry.
+
+   Security features: strong encryption (AES), integrity (HMAC-SHA-2), peer
+   authentication (certificates/PSK), perfect forward secrecy (DH), replay
+   protection with sequence numbers, protection against IP spoofing and MITM.
+
+Comparison:
+   Feature        | TLS/SSL                    | IPsec
+   ---------------+----------------------------+--------------------------------
+   Layer          | Transport/application      | Network (IP) layer
+   Protection of  | One application connection | All IP traffic between hosts/
+                  | (per application)          | networks
+   Typical use    | HTTPS, e-mail, web VPN     | Site-to-site and remote VPN
+   Setup          | Easy, no client software   | More complex; client/gateway
+                  | needed for browsers        | configuration
+   Authentication | Mostly server (certificate)| Mutual (PSK or certificates)
+
+
+-----------------------------------------------------------------------------
+Q5.
+-----------------------------------------------------------------------------
+What is Public Key Infrastructure (PKI)? Explain its components and working.
+Discuss the role of digital certificates and Certificate Authorities in
+establishing trust and securing network communications.
+
+ANSWER:
+
+Definition
+Public Key Infrastructure (PKI) is the framework of roles, policies, hardware,
+software and procedures needed to create, manage, distribute, use, store and
+revoke digital certificates and to manage public-key encryption. Its purpose
+is to bind a public key to the identity of its owner in a trusted way, so that
+users can be sure who owns a public key (solving the public-key authenticity
+problem and stopping man-in-the-middle attacks).
+
+Components of PKI
+ 1. Certificate Authority (CA): trusted third party that issues, signs, renews
+    and revokes digital certificates. Types: root CA (offline, self-signed,
+    most trusted), intermediate/subordinate CAs (issue end-entity
+    certificates), and public vs private (enterprise) CAs.
+ 2. Registration Authority (RA): verifies the identity of the applicant on
+    behalf of the CA before a certificate is issued.
+ 3. Digital certificate (X.509): an electronic document that binds a public
+    key to an identity.
+ 4. Certificate repository/directory: storage where certificates and
+    revocation information are published (LDAP, web).
+ 5. Certificate revocation mechanism: Certificate Revocation Lists (CRL) and
+    Online Certificate Status Protocol (OCSP, including OCSP stapling) tell
+    whether a certificate is still valid.
+ 6. End entities: users, servers, devices or applications that hold
+    certificates and keys, and relying parties that verify them.
+ 7. Key management and secure storage: key generation, backup/escrow,
+    archival, hardware security modules (HSM), smart cards, tokens.
+ 8. Policies and standards: Certificate Policy (CP), Certification Practice
+    Statement (CPS), audits (e.g. WebTrust).
+ (In India, CAs are licensed and regulated by the Controller of Certifying
+ Authorities (CCA) under the IT Act, 2000.)
+
+Digital certificate contents (X.509 v3)
+   Version, serial number, signature algorithm, issuer name, validity (not
+   before/not after), subject name, subject public key info, extensions
+   (key usage, subject alternative name, basic constraints, CRL/OCSP
+   locations) and the CA's digital signature over all these fields.
+
+Working of PKI
+  1. Key generation: the applicant (e.g. a web server) generates a public/
+     private key pair; the private key never leaves the owner.
+  2. Certificate Signing Request (CSR): the applicant sends the public key and
+     identity information to the RA/CA.
+  3. Identity verification: the RA/CA validates the domain/organization
+     (DV, OV or EV validation).
+  4. Certificate issuance: the CA signs the certificate with its private key
+     and returns it; it is published in a repository.
+  5. Use: during, for example, a TLS handshake the server sends its
+     certificate; the client verifies:
+        - the CA's signature using the CA's public key (follow the chain up to
+          a trusted root stored in the browser/OS),
+        - validity dates, domain name match and intended key usage,
+        - that it has not been revoked (CRL/OCSP).
+     Then the client trusts the server's public key and uses it for
+     authentication and key exchange.
+  6. Renewal and revocation: certificates expire (now at most about a year for
+     public TLS) and are revoked if the private key is compromised.
+
+  Chain of trust:
+        Root CA (self-signed, in trust store)
+              |  signs
+        Intermediate CA
+              |  signs
+        End-entity certificate (www.example.com)
+
+Role of digital certificates
+  - Prove the identity of a server, person, device or software (authentication).
+  - Distribute public keys safely for encryption and signature verification.
+  - Enable HTTPS, secure e-mail (S/MIME), code signing, VPN authentication,
+    document signing, smart card login and IoT device identity.
+  - Provide non-repudiation, together with digital signatures.
+
+Role of Certificate Authorities in trust
+  - CAs act as trusted third parties: if you trust the CA, you can trust any
+    certificate it signs. Browsers and operating systems ship with a list of
+    trusted root CAs.
+  - A CA must verify identities carefully, protect its private key, publish
+    revocation status and follow audit rules. If a CA is compromised or
+    issues false certificates (e.g. DigiNotar, 2011), trust is lost and the CA
+    is removed from trust stores.
+  - Other trust models: web of trust (PGP), and Certificate Transparency logs
+    for public monitoring of issued certificates.
+
+How PKI secures network communications
+  - TLS/HTTPS: authenticates websites and establishes encrypted sessions.
+  - IPsec/VPN and Wi-Fi (WPA-Enterprise/EAP-TLS): certificate-based
+    authentication of gateways, users and devices.
+  - E-mail and document security: S/MIME and digital signatures.
+  - Software/firmware signing to ensure authenticity and integrity.
+
+
+=============================================================================
+Reference books and sources:
+1. William Stallings, "Cryptography and Network Security: Principles and
+   Practice", Pearson.
+2. Behrouz A. Forouzan, "Cryptography and Network Security", McGraw-Hill.
+3. IETF RFC 8446 (TLS 1.3), RFC 4301 (IPsec architecture), RFC 5280 (X.509
+   PKI).
+4. Information Technology Act, 2000; Digital Personal Data Protection Act,
+   2023; CERT-In Directions, 2022 (Government of India).
+=============================================================================

@@ -1,0 +1,197 @@
+Assignment-02
+
+Q1. (Short) List the four fundamental cryptographic goals/objectives.
+
+Answer: The four fundamental goals of cryptography are:
+1. Confidentiality - only authorised people can read the information.
+2. Integrity - the information is not altered without detection.
+3. Authentication - the identity of the sender, receiver or system is proved.
+4. Non-repudiation - a sender cannot later deny having sent a message or made a transaction.
+
+
+Q2. (Short) Define "Confidentiality" as a cryptographic goal with one example.
+
+Answer: Confidentiality means keeping information secret so that only the intended, authorised person can read it, even if the data is intercepted on the way. It is achieved mainly by encryption. For example, when you enter your card number on a shopping website, HTTPS encrypts it with AES, so anyone capturing the network traffic sees only unreadable ciphertext.
+
+
+Q3. (Long) Explain each of the following cryptographic objectives in detail with real-world scenarios: Confidentiality, Integrity, Authentication, and Non-repudiation. Why is it important to achieve all four together in a secure communication system?
+
+Answer:
+
+1. Confidentiality
+Confidentiality ensures that data can be read only by those who are authorised. It is provided by encryption (symmetric ciphers such as AES, or public-key encryption such as RSA).
+Scenario: In WhatsApp, a message is encrypted on the sender's phone and decrypted only on the receiver's phone (end-to-end encryption), so even the service provider or a hacker on the network cannot read the chat.
+
+2. Integrity
+Integrity ensures that data has not been modified, deleted or inserted by an unauthorised party during storage or transmission. It is provided by hash functions (SHA-256), message authentication codes (HMAC) and digital signatures. The sender sends the data along with its hash or MAC, and the receiver recomputes it. If even one bit has changed, the values will not match.
+Scenario: When you download a software installer, the website publishes its SHA-256 checksum. If a hacker has changed the file to include a virus, the checksum will not match, and you know the file is not genuine. In online banking, integrity makes sure that a transfer of Rs. 1,000 cannot be changed to Rs. 10,000 on the way.
+
+3. Authentication
+Authentication proves that a person, device or message really is who or what it claims to be. It is provided by passwords (stored as salted hashes), one-time passwords, digital certificates, digital signatures and challenge-response protocols.
+Scenario: When you open your bank's website, the browser checks the site's digital certificate, signed by a trusted Certificate Authority, to confirm that you are talking to the real bank and not a fake copy. In the same way, the bank authenticates you using your password and OTP.
+
+4. Non-repudiation
+Non-repudiation prevents a person from denying an action that he or she has really performed. It is provided by digital signatures: a message signed with the sender's private key can be verified by anyone using the public key, but only the owner of the private key could have created it. A trusted timestamp is often added to prove when it was signed.
+Scenario: If a company signs a purchase order digitally and later claims "we never sent it", the signature is proof that it did. Digitally signed tax returns and e-contracts work the same way.
+
+Why all four must be achieved together:
+- Each goal protects against a different threat, and none can replace the others. Encryption alone does not stop an attacker from modifying or replaying the ciphertext, and a hash alone does not hide the content.
+- Confidentiality without authentication is dangerous: you may send an encrypted secret perfectly, but to an attacker pretending to be the receiver (man-in-the-middle attack).
+- Authentication without integrity lets an attacker change the message after the sender has been verified.
+- Without non-repudiation, disputes cannot be settled in e-commerce, banking and legal documents, because either party could deny the transaction.
+Example: In an online money transfer, the transaction must be secret (confidentiality), must not be altered (integrity), must come from the real account holder to the real bank (authentication), and must not be deniable later (non-repudiation). Protocols such as TLS and systems such as digital signatures combine all four to provide a complete secure communication system.
+
+
+Q4. (Short) What is the difference between a substitution cipher and a transposition cipher? Give one example of each.
+
+Answer: A substitution cipher replaces each letter (or group of letters) of the plaintext with another letter or symbol, so the letters change but stay in the same positions. A transposition cipher keeps the same letters but rearranges their positions according to a rule.
+Example of substitution: the Caesar cipher with shift 3 turns HELLO into KHOOR.
+Example of transposition: the rail fence cipher with 2 rails writes HELLOWORLD in a zig-zag and reads each row, giving HLOOLELWRD.
+
+
+Q5. (Long) Discuss the evolution from classical ciphers to modern cryptographic standards (DES -> AES, RSA, SHA). Highlight key milestones and motivations for change.
+
+Answer:
+
+Classical ciphers (up to the early 20th century): Caesar, Vigenere and Playfair ciphers used simple substitution or transposition on letters, with small key spaces and often with the algorithm kept secret. They were broken by frequency analysis and pattern detection, and mechanical machines such as Enigma could not stand against early computers and mathematical analysis.
+
+Milestones and motivations:
+
+1. 1949 - Shannon: Claude Shannon's work on secrecy systems introduced the ideas of confusion and diffusion, which still guide cipher design.
+
+2. DES (1977): In the 1970s banks and governments needed a common, public encryption standard for computers. IBM's Lucifer cipher became the Data Encryption Standard (DES), a block cipher with 64-bit blocks and a 56-bit key, using 16 Feistel rounds.
+Why it had to change: The 56-bit key became too small as computers became faster. In 1998 the EFF's special machine "Deep Crack" broke a DES key in about 56 hours. Triple-DES (3DES) was used as a temporary fix by applying DES three times, but it was slow and had a small 64-bit block size.
+
+3. AES (2001): NIST held an open public competition (1997-2000) and selected the Rijndael cipher, designed by Joan Daemen and Vincent Rijmen, as the Advanced Encryption Standard. AES has a 128-bit block and 128, 192 or 256-bit keys, is fast in both software and hardware, and has no practical attack so far. Motivation: stronger security, a longer key, better efficiency, and an open and trusted selection process.
+
+4. RSA (1977): Symmetric ciphers such as DES and AES need both parties to share a secret key first. Rivest, Shamir and Adleman published RSA, the first practical public-key system, based on the difficulty of factoring the product of two large primes. It solved the key-distribution problem and made digital signatures possible. Over time key sizes grew (from 512 bits to 2048 bits or more) as computers improved, and elliptic-curve cryptography (ECC) later offered the same security with much shorter keys.
+
+5. Hash functions (MD5 to SHA): MD5 (1991) and SHA-1 (1995) were widely used for integrity and signatures. Collision attacks were found against MD5 (2004) and SHA-1 (practical collision in 2017), so they became unsafe. NIST published the SHA-2 family (SHA-256, SHA-512) in 2001 and SHA-3 (Keccak) in 2015 as a different design in case SHA-2 weakens.
+
+Overall motivation for change: (a) increasing computing power made short keys breakable, (b) cryptanalysis found weaknesses in old designs, (c) the growth of the Internet and e-commerce needed key exchange and signatures among strangers, and (d) the need for open, standardised and publicly analysed algorithms. Today new threats such as quantum computers are driving a new move to post-quantum standards (NIST selected ML-KEM, ML-DSA and SLH-DSA in 2024).
+
+
+Q6. (Short) What is a "key" in cryptography, and why is key management important?
+
+Answer: A key is a secret value (a string of bits) that is given to a cryptographic algorithm to control how data is encrypted, decrypted, signed or verified; the same algorithm with a different key gives a different output. Key management is important because modern security rests entirely on the secrecy of the key (the algorithm is public). If a key is weakly generated, shared carelessly, stored insecurely or never changed, an attacker can break the system even though the algorithm is strong. Key management therefore covers generation, distribution, storage, rotation, revocation and destruction of keys.
+
+
+Q7. (Long) Cryptography plays a vital role in securing computer networks. Explain, with suitable examples, how cryptographic techniques are used to protect data during transmission, prevent unauthorized access, and detect tampering in a network.
+
+Answer: A network such as the Internet is shared and untrusted. Attackers can sniff packets, pretend to be another user, or change data in transit. Cryptography counters this in three main ways.
+
+1. Protecting data during transmission (encryption)
+Data is encrypted before it leaves the sender so that anyone capturing the packets sees only ciphertext.
+- HTTPS (TLS): the browser and server perform a handshake, agree on a session key using asymmetric cryptography, and then encrypt all web traffic with a symmetric cipher such as AES.
+- VPN (IPSec): packets are encrypted and sent through a secure tunnel across the public Internet, so a remote employee can safely reach the office network.
+- Wi-Fi (WPA2/WPA3): wireless traffic is encrypted with AES so nearby users cannot read it.
+
+Simple diagram of HTTPS:
+
+   Client (browser)                                  Server (website)
+        |  1. Hello, supported ciphers  ------------------>|
+        |  <------------- 2. Certificate + public key      |
+        |  3. Verify certificate (authentication)          |
+        |  4. Session key (encrypted with public key) ---->|
+        |  <=========== 5. AES-encrypted data ===========> |
+
+2. Preventing unauthorised access (authentication and access control)
+- Passwords are stored as salted hashes (for example bcrypt) so that even if the database is stolen, the original passwords are not revealed.
+- Digital certificates and signatures prove the identity of servers and users, which prevents fake websites and man-in-the-middle attacks.
+- SSH uses public-key authentication so that only a user who holds the matching private key can log in to a server.
+- OTPs and challenge-response schemes in banking apps add another layer so that a stolen password alone is not enough.
+
+3. Detecting tampering (integrity checking)
+- A hash or HMAC is attached to each message, and the receiver recomputes it. Any change in the data changes the value and the tampering is detected. TLS adds a MAC to every record, and IPSec uses AH/ESP integrity checks.
+- Digital signatures protect software updates and documents. If an attacker modifies a signed update, signature verification fails and the update is rejected.
+- Checksums such as SHA-256 are used to verify downloaded files.
+
+Conclusion: Together, encryption, authentication and integrity mechanisms make data secret, make sure it comes from the right party and ensure it arrives unchanged, which is the basis of secure web browsing, online banking, email and remote access.
+
+
+Q8. (Short) Differentiate between a passive attack and an active attack on a cryptographic system, with one example of each.
+
+Answer: A passive attack only observes or monitors the communication to obtain information, without changing the data or the system, so it is hard to detect but can be prevented by encryption. Example: eavesdropping on unencrypted Wi-Fi traffic or traffic analysis. An active attack tries to modify, fabricate, replay or disrupt the data or the system, so it can be detected but is more difficult to prevent completely. Example: a man-in-the-middle attack in which the attacker intercepts and changes messages between two parties, or a replay attack that resends a captured valid transaction.
+
+
+Q9. (Long) Describe how cryptographic techniques evolved historically to counter emerging security threats. Include a discussion of the shift from symmetric-only systems to the introduction of asymmetric (public-key) cryptography, and how this addressed the key-distribution problem.
+
+Answer:
+
+Evolution against emerging threats:
+- Early threat: interception of messages by enemies. Response: simple ciphers such as the scytale and Caesar cipher.
+- New threat: frequency analysis (al-Kindi, 9th century) broke simple substitution. Response: polyalphabetic ciphers such as Vigenere (16th century), which hid letter frequencies.
+- New threat: systematic cryptanalysis (Kasiski, 1863) broke Vigenere. Response: mechanical and electro-mechanical machines such as Enigma in the 20th century.
+- New threat: computers and mathematical cryptanalysis broke the machine ciphers (Bletchley Park in WWII). Response: computer-based, key-driven block ciphers such as DES (1977).
+- New threat: increasing computing power and brute force (DES cracked in 1998). Response: 3DES and then AES (2001) with longer keys.
+- New threat: weakness in hash functions (MD5, SHA-1 collisions). Response: SHA-2 and SHA-3.
+- New threat: possible quantum computers. Response: post-quantum algorithms (NIST 2024).
+
+Symmetric-only systems and the key-distribution problem:
+Until the 1970s all cryptography was symmetric: both sides need the same secret key. This created the key-distribution problem:
+1. The key must be shared secretly before secure communication begins, but if a secure channel already existed to share it, encryption would not be needed. Earlier this was done by couriers or codebooks, which is slow, costly and risky.
+2. In a network of n users, every pair needs a separate key, so n(n-1)/2 keys are required (1,000 users need 499,500 keys).
+3. Keys cannot easily be shared with strangers, such as an online shop that a customer has never met.
+4. Symmetric keys cannot give non-repudiation, because both parties hold the same key.
+
+Public-key (asymmetric) cryptography:
+In 1976 Whitfield Diffie and Martin Hellman proposed using a pair of mathematically related keys, a public key and a private key, and published the Diffie-Hellman key-exchange method. In 1977 Rivest, Shamir and Adleman created RSA, the first practical public-key encryption and signature system.
+
+How it solved the problem:
+- Each user publishes the public key openly (even over an insecure channel) and keeps the private key secret, so no secret needs to be exchanged in advance.
+- Anyone can encrypt a message to a user with his public key, but only that user can decrypt it with the private key.
+- Each user needs only one key pair, so n users need only n pairs, not n(n-1)/2 keys.
+- Diffie-Hellman lets two strangers create a shared secret over a public channel.
+- Digital signatures with the private key provide authentication and non-repudiation.
+- Digital certificates and a Public Key Infrastructure (PKI) let users trust that a public key really belongs to its owner.
+
+Simple comparison diagram:
+
+   Symmetric only:   A ---- secret key must be sent first (risky) ----> B
+   Public key:       B publishes public key (anyone can see it)
+                     A encrypts with B's public key ----> B decrypts with B's private key
+
+Because asymmetric algorithms are slow, modern systems use a hybrid approach: public-key cryptography (RSA or Diffie-Hellman) securely establishes a session key, and a fast symmetric cipher (AES) then encrypts the bulk data. This is exactly how HTTPS/TLS works.
+
+
+Q10. (Short) Give one example each of a modern symmetric algorithm and a modern asymmetric algorithm used today.
+
+Answer: A modern symmetric algorithm is AES (Advanced Encryption Standard) with 128, 192 or 256-bit keys, used for file encryption, Wi-Fi and HTTPS data. A modern asymmetric algorithm is RSA (with 2048-bit or larger keys), used for key exchange, digital signatures and certificates. Elliptic Curve Cryptography (ECC) is another widely used asymmetric choice.
+
+
+Q11. (Long) Discuss the classification of cryptography into Classical Cryptography and Modern Cryptography. Explain the transition from manual/mechanical methods to computer-based algorithms, mentioning key milestones and technologies involved.
+
+Answer:
+
+Classical cryptography
+Classical cryptography covers the pen-and-paper and mechanical ciphers used from ancient times up to about the mid-20th century. It works on letters and is based on two basic operations:
+- Substitution: letters are replaced by other letters or symbols (Caesar cipher, Vigenere cipher, Playfair cipher, monoalphabetic ciphers).
+- Transposition: the positions of letters are rearranged (scytale, rail fence, columnar transposition).
+Features: simple operations, small key space, often security by keeping the method secret, easy to break with frequency analysis and today with a computer in seconds. Used mainly for military and diplomatic secrecy. Mechanical devices such as the cipher disk and the Enigma rotor machine automated these operations.
+
+Modern cryptography
+Modern cryptography (from the 1970s onwards) is based on mathematics and computer science and works on bits and bytes. It follows Kerckhoffs' principle: the algorithm is public and only the key is secret. It has a wider scope: confidentiality, integrity, authentication and non-repudiation. Its main branches are:
+- Symmetric-key cryptography: block ciphers (DES, AES) and stream ciphers (RC4, ChaCha20).
+- Asymmetric-key cryptography: RSA, Diffie-Hellman, ECC, DSA.
+- Hash functions and MACs: SHA-256, SHA-3, HMAC.
+- Digital signatures, certificates and protocols: PKI, TLS, IPSec, PGP.
+
+Comparison:
+- Data handled: classical works on letters; modern works on bits/bytes.
+- Security basis: classical on secrecy of the method; modern on secret keys and hard mathematical problems.
+- Key space: classical small; modern very large (128-bit keys and above).
+- Tools: classical pen, paper and mechanical machines; modern computers.
+- Goals: classical mainly secrecy; modern secrecy, integrity, authentication and non-repudiation.
+- Examples: classical Caesar, Vigenere, Enigma; modern AES, RSA, SHA-256.
+
+Transition from manual and mechanical methods to computer-based algorithms
+1. Manual era: ciphers were applied by hand (Caesar cipher, Vigenere cipher). Weak against frequency analysis.
+2. Mechanical and electro-mechanical era (early 1900s to 1940s): Enigma (Scherbius, 1918), Lorenz and Hagelin machines automated polyalphabetic substitution using rotors and gears. The Allies broke them using electro-mechanical machines such as the Polish bomba and Turing's bombe, and the first programmable electronic computer, Colossus, which showed that computers were the future of both making and breaking ciphers.
+3. Theoretical foundation (1949): Claude Shannon's paper "Communication Theory of Secrecy Systems" made cryptography a science and introduced confusion and diffusion.
+4. Computer-based era (1970s): With digital computers and integrated circuits, ciphers could process bits at high speed. IBM's Lucifer led to the Data Encryption Standard (DES) in 1977, the first public computer-based standard.
+5. Public-key revolution (1976-77): Diffie-Hellman and RSA introduced asymmetric cryptography, enabling secure communication between strangers and digital signatures.
+6. Internet era (1990s onwards): PGP (1991) for email, SSL/TLS for web security, and hash standards such as SHA-1 and SHA-2 provided security for e-commerce and online banking.
+7. Modern standards: AES (2001), ECC, SHA-3 (2015) and TLS 1.3. Faster processors, GPUs and smartphones made strong encryption available to everyone.
+8. Future: quantum computers threaten RSA and ECC, so post-quantum cryptography (NIST standards in 2024) is now being introduced.
+
+Conclusion: Cryptography has changed from a hand-made art of hiding letters to a computer-based science that protects the whole digital world. The key technologies in this change were mechanical rotors, electronic computers, integrated circuits, mathematical number theory and the Internet.

@@ -1,0 +1,392 @@
+Assignment-06
+=============================================================================
+Introduction to Hash Cryptography
+Subject: Cryptography and Network Security (BCA309T)
+=============================================================================
+
+
+-----------------------------------------------------------------------------
+Q1.
+-----------------------------------------------------------------------------
+Define hash cryptography. Explain the fundamental principles and techniques of
+cryptographic hash functions with suitable examples.
+
+ANSWER:
+
+Definition
+Hash cryptography is the branch of cryptography that uses cryptographic hash
+functions. A hash function H takes an input (message) M of ANY length and
+produces a fixed-length output h = H(M), called the hash value, message
+digest or fingerprint. A cryptographic hash function is a hash function that
+is one-way (cannot be reversed), deterministic and collision-resistant. Unlike
+encryption, no key is used (in the basic form) and the process cannot be
+undone to recover the message.
+
+        Message of any size  --->  [ Hash function H ]  --->  fixed-size digest
+        "abc"                                                 (e.g. 256 bits)
+
+Fundamental principles
+ 1. Fixed-length output: whatever the input size (1 byte or 1 GB), the digest
+    length is constant (e.g. 128 bits for MD5, 160 for SHA-1, 256 for SHA-256).
+ 2. Deterministic: the same input always gives the same digest.
+ 3. Efficiency: H(M) is fast to compute for any M.
+ 4. One-way (pre-image resistance): given h it is infeasible to find M with
+    H(M) = h.
+ 5. Avalanche effect: changing a single bit of the input changes about half of
+    the output bits, so the digest looks random.
+ 6. Collision resistance: it is infeasible to find two different messages with
+    the same digest.
+
+Example (digests in hexadecimal):
+   SHA-256("abc") = ba7816bf 8f01cfea 414140de 5dae2223
+                    b00361a3 96177a9c b410ff61 f20015ad
+   MD5("abc")     = 900150983cd24fb0d6963f7d28e17f72
+   SHA-1("abc")   = a9993e364706816aba3e25717850c26c9cd0d89d
+   Changing "abc" to "abd" gives a completely different, unrelated SHA-256
+   value; the output length stays 256 bits.
+
+Techniques used to build hash functions
+
+ 1. Iterated hash / Merkle-Damgard construction (MD5, SHA-1, SHA-2)
+    - The message is padded (a 1 bit, zeros, and the message length) to a
+      multiple of the block size.
+    - It is split into blocks M1, M2, ..., Mn.
+    - A fixed initial value (IV) is processed with each block by a
+      compression function f:
+            H0 = IV,   Hi = f(H(i-1), Mi),   digest = Hn
+    - If f is collision-resistant, so is the whole hash.
+
+                IV --> [ f ] --> [ f ] --> [ f ] --> ... --> digest
+                         ^        ^        ^
+                         |        |        |
+                        M1       M2       M3 (padded)
+
+    Weakness: length-extension attack on plain H(key || message).
+
+ 2. Sponge construction (SHA-3/Keccak)
+    The state (r bits rate + c bits capacity) "absorbs" message blocks by
+    XOR into the rate part, applying a permutation after each block, and then
+    "squeezes" out the digest. It resists length extension.
+
+ 3. Building from block ciphers (Davies-Meyer, Matyas-Meyer-Oseas, Miyaguchi-
+    Preneel): Hi = E(Mi, H(i-1)) XOR H(i-1).
+
+ 4. Internal operations: bitwise operations (AND, OR, XOR, NOT), rotations and
+    shifts, modular addition and constants, repeated for many rounds to
+    achieve confusion and diffusion.
+
+ 5. Keyed hashing (HMAC): H combined with a secret key for authentication.
+
+Other points: hash values are also used in data structures (hash tables), but
+these ordinary hashes (e.g. CRC) are NOT cryptographically secure.
+
+
+-----------------------------------------------------------------------------
+Q2.
+-----------------------------------------------------------------------------
+Discuss the role of cryptographic hash functions in cryptographic
+applications. Explain their use in data integrity verification, digital
+signatures, password storage, and message authentication.
+
+ANSWER:
+
+Cryptographic hash functions are a basic building block of security. They
+provide a short, unique "fingerprint" of data and are used wherever data must
+be checked, signed, authenticated or kept secret in a one-way form.
+
+1. Data integrity verification
+   - Compute the hash of the data before sending/storing it and publish or
+     keep the digest safely.
+   - The receiver recomputes the hash of the received data; if the two
+     digests are equal, the data was not altered (even a 1-bit change gives
+     a different digest).
+   - Examples: checksums for software downloads (SHA-256 shown on websites),
+     backup verification, file-integrity monitors (Tripwire), Git object IDs.
+   - Note: the digest itself must be sent via a trusted channel, otherwise an
+     attacker can change both the file and the hash. Hash alone detects
+     accidental or unauthorized change only if the digest is protected.
+
+2. Digital signatures
+   - Signing a long message directly with RSA/ECDSA is slow, so the message is
+     first hashed ("hash-then-sign").
+        Signer:   h = H(M);  S = Sign(private key, h);  send M and S
+        Verifier: h' = H(M received); check Verify(public key, S) = h'
+   - The hash ensures integrity (any change in M changes h), and the
+     signature gives authentication and non-repudiation.
+   - If the hash function is not collision-resistant, an attacker can get a
+     signature on one message and reuse it for another message with the same
+     hash (forged document), which is why MD5 and SHA-1 are no longer used
+     for signatures.
+
+3. Password storage
+   - Systems should never store passwords in plain text. They store H(password)
+     and at login compute the hash of the entered password and compare.
+     A database leak then does not directly reveal passwords (hash is one-way).
+   - Problems: identical passwords produce identical hashes, and attackers use
+     dictionary/brute-force attacks and precomputed rainbow tables.
+   - Protection: add a unique random SALT per user, storing H(salt || password),
+     and use slow, memory-hard password hashing functions (bcrypt, scrypt,
+     PBKDF2 with many iterations, Argon2) instead of one fast hash like plain
+     SHA-256 or MD5. A "pepper" (secret value kept outside the database) may be
+     added.
+
+4. Message authentication
+   - A plain hash cannot authenticate the sender because anyone can compute it.
+     A Message Authentication Code (MAC) combines the hash with a shared
+     secret key K so only holders of K can produce a valid tag.
+   - HMAC (RFC 2104):
+        HMAC(K, M) = H( (K' XOR opad) || H( (K' XOR ipad) || M ) )
+     where K' is K padded to the block size, ipad = 0x36 repeated and
+     opad = 0x5C repeated. Examples: HMAC-SHA256.
+   - Receiver recomputes the tag with the shared key; a match proves that the
+     message came from someone with the key and was not modified (integrity +
+     authentication). Used in TLS, IPsec, SSH, JWT (HS256), API request
+     signing.
+   - Using H(key || M) directly is unsafe (length-extension), hence HMAC.
+
+Other roles: key derivation (HKDF, PBKDF2), pseudo-random number generation,
+commitment schemes, proof-of-work (Bitcoin), Merkle trees and blockchains,
+digital forensics (evidence hashing), and deduplication.
+
+
+-----------------------------------------------------------------------------
+Q3.
+-----------------------------------------------------------------------------
+Explain the advantages and disadvantages of hash cryptography. Discuss the
+major properties of a secure cryptographic hash function, including preimage
+resistance, second-preimage resistance, and collision resistance.
+
+ANSWER:
+
+Advantages
+ 1. Fast and efficient: easy to compute for data of any size, in software and
+    hardware.
+ 2. Fixed, short output: a small fingerprint represents very large data, so it
+    is cheap to store, send and compare.
+ 3. One-way: the original data cannot be recovered from the digest, which is
+    useful for password storage.
+ 4. Integrity: very sensitive to changes (avalanche effect).
+ 5. No key management needed (for plain hashes), simple to use.
+ 6. Basis for many protocols: signatures, MAC/HMAC, certificates, blockchains.
+
+Disadvantages
+ 1. No confidentiality: a hash does not encrypt; the original cannot be
+    retrieved, so it cannot be used when the data must be decrypted later.
+ 2. No authentication on its own: anyone can compute a hash, so a MAC/HMAC or
+    signature is needed.
+ 3. Collisions must exist (pigeonhole principle: infinite inputs, finite
+    outputs). Weak algorithms (MD5, SHA-1) have practical collision attacks.
+ 4. Fast hashes are easy to brute-force: billions of guesses per second on
+    GPUs, so weak or unsalted passwords can be cracked using dictionaries and
+    rainbow tables.
+ 5. Plain Merkle-Damgard hashes (SHA-256, SHA-512) allow length-extension
+    attacks if used wrongly.
+ 6. Algorithms age: advances in cryptanalysis and computing (and quantum
+    computers via Grover's algorithm, which halves effective security) force
+    migration to stronger functions.
+
+Properties of a secure cryptographic hash function (n = digest length in bits)
+
+ 1. Preimage resistance (one-wayness)
+    Given a digest h, it is computationally infeasible to find any message M
+    such that H(M) = h.
+    Brute-force effort: about 2^n operations.
+    Importance: protects stored password hashes and prevents recovering data.
+
+ 2. Second-preimage resistance (weak collision resistance)
+    Given a message M1, it is infeasible to find a different message M2 with
+    H(M2) = H(M1).
+    Brute-force effort: about 2^n operations.
+    Importance: an attacker cannot substitute a forged file/document with the
+    same hash as a known genuine one.
+
+ 3. Collision resistance (strong collision resistance)
+    It is infeasible to find ANY two different messages M1 and M2 with
+    H(M1) = H(M2) (the attacker is free to choose both).
+    Brute-force effort: only about 2^(n/2) operations because of the birthday
+    paradox. So a 128-bit hash (MD5) offers only 64-bit collision security,
+    while SHA-256 gives 128-bit collision security.
+    Importance: needed for digital signatures and certificates.
+
+    Relationship: collision resistance implies second-preimage resistance
+    (in general), so it is the strongest requirement; none of them is implied
+    by preimage resistance.
+
+ Additional desirable properties:
+   - Deterministic and efficient to compute for any input size.
+   - Fixed-size output.
+   - Avalanche effect / pseudo-random output.
+   - Non-malleability and resistance to length-extension (for new designs).
+
+ Summary table:
+   Property               | Attacker's goal                     | Work (n-bit)
+   -----------------------+-------------------------------------+-------------
+   Preimage resistance    | Find M for a given h                | 2^n
+   Second-preimage res.   | Find M2 != M1 with H(M2) = H(M1)    | 2^n
+   Collision resistance   | Find any M1 != M2 with equal hash   | 2^(n/2)
+
+
+-----------------------------------------------------------------------------
+Q4.
+-----------------------------------------------------------------------------
+Describe the Secure Hash Algorithm (SHA) family. Explain the development and
+key features of SHA-1, SHA-2, and SHA-3, highlighting their major differences.
+
+ANSWER:
+
+The Secure Hash Algorithm (SHA) family is a set of cryptographic hash
+functions published by NIST as Federal Information Processing Standards
+(FIPS 180 and FIPS 202). The algorithms were designed first by the US NSA and
+later (SHA-3) selected through an open competition.
+
+Development and history
+ - SHA-0 (1993): the original; withdrawn soon after due to an undisclosed
+   flaw.
+ - SHA-1 (1995, FIPS 180-1): corrected version of SHA-0 (one added bit
+   rotation).
+ - SHA-2 (2001, FIPS 180-2): a new family with longer digests; later
+   additions SHA-512/224 and SHA-512/256 (2012).
+ - SHA-3 (2015, FIPS 202): based on Keccak, selected from the NIST hash
+   competition (announced 2007; 51 first-round submissions; 5 finalists:
+   BLAKE, Grostl, JH, Keccak and Skein; Keccak won in October 2012). It was
+   started as a back-up in case SHA-2 is broken, not because SHA-2 is broken.
+
+SHA-1
+ - Digest size 160 bits; block size 512 bits; message processed in 80 rounds;
+   32-bit words; 5 working registers (A-E); Merkle-Damgard construction.
+ - Steps: pad message -> split into 512-bit blocks -> expand each block's 16
+   words to 80 words -> 80 rounds using logical functions (f), constants (K)
+   and rotations -> add result to chaining value.
+ - Security: Theoretical collision attack by Wang et al. (2005), practical
+   collision "SHAttered" demonstrated by Google and CWI in 2017 (two different
+   PDF files with the same SHA-1), chosen-prefix collisions in 2019-2020.
+   Deprecated: browsers and CAs rejected SHA-1 certificates; NIST plans to
+   retire it completely by 2030. Not to be used for signatures.
+
+SHA-2 family
+ - Variants: SHA-224, SHA-256, SHA-384, SHA-512 (plus SHA-512/224 and
+   SHA-512/256).
+ - SHA-256: 256-bit digest, 512-bit blocks, 32-bit words, 64 rounds, 8 working
+   variables (a-h), uses functions Ch, Maj, Sigma0, Sigma1 and 64 round
+   constants.
+ - SHA-512: 512-bit digest, 1024-bit blocks, 64-bit words, 80 rounds
+   (faster on 64-bit CPUs). SHA-384 is a truncated version of SHA-512 with
+   different initial values (SHA-224 similarly from SHA-256).
+ - Still Merkle-Damgard; the truncated versions (SHA-384, SHA-512/256) are
+   resistant to length-extension attacks, SHA-256 and SHA-512 are not.
+ - No practical attacks are known; it is the most widely used hash today.
+
+SHA-3 (Keccak)
+ - Designed by Bertoni, Daemen, Peeters and Van Assche.
+ - Different internal structure: SPONGE construction on a 1600-bit state,
+   absorbing message blocks (rate r) and squeezing the output; capacity
+   c = 2 x digest length (e.g. SHA3-256: r = 1088, c = 512).
+ - 24 rounds of a permutation Keccak-f[1600] with five steps: theta, rho, pi,
+   chi, iota (operating on a 5x5x64-bit array).
+ - Variants: SHA3-224, SHA3-256, SHA3-384, SHA3-512 and the
+   extendable-output functions SHAKE128 and SHAKE256 (variable-length output).
+ - Not vulnerable to length-extension; very efficient in hardware and flexible
+   (can also give MAC, KDF, PRNG, etc.).
+
+Major differences
+
+ Feature          | SHA-1            | SHA-2                | SHA-3
+ -----------------+------------------+----------------------+----------------------
+ Year             | 1995             | 2001                 | 2015
+ Designer         | NSA              | NSA                  | Keccak team (open
+                  |                  |                      | competition, NIST)
+ Digest size      | 160 bits         | 224/256/384/512      | 224/256/384/512 (+
+                  |                  |                      | SHAKE variable length)
+ Block/rate size  | 512 bits         | 512 or 1024 bits     | rate 1152-576 bits
+                  |                  |                      | (1600-bit state)
+ Word size        | 32 bits          | 32 or 64 bits        | 64-bit lanes
+ Rounds           | 80               | 64 (SHA-256) /       | 24
+                  |                  | 80 (SHA-512)         |
+ Construction     | Merkle-Damgard   | Merkle-Damgard       | Sponge
+ Length-extension | Vulnerable       | Vulnerable (full     | Not vulnerable
+                  |                  | versions)            |
+ Security status  | Broken for       | Secure               | Secure
+                  | collisions       |                      |
+ Collision        | ~2^63 or less    | 2^112 - 2^256        | 2^112 - 2^256
+ security         | (practical)      |                      |
+
+Note: SHA-3 is not a replacement forced by a break of SHA-2; both are
+approved. SHA-2 is widely deployed; SHA-3 offers a different design as a
+safeguard.
+
+
+-----------------------------------------------------------------------------
+Q5.
+-----------------------------------------------------------------------------
+Explain the applications of SHA algorithms in cryptographic protocols and
+information security. Discuss their role in digital certificates, digital
+signatures, file integrity checking, and secure communication.
+
+ANSWER:
+
+SHA algorithms (mainly SHA-256, SHA-384, SHA-512 and SHA-3) are used almost
+everywhere in modern security to provide integrity, authentication and
+fingerprints.
+
+1. Digital certificates (X.509 / PKI)
+   - A certificate authority (CA) hashes the certificate contents (subject,
+     public key, validity, extensions) with SHA-256 (or stronger) and signs the
+     digest with its private key. The algorithm appears in the certificate as
+     e.g. "sha256WithRSAEncryption" or "ecdsa-with-SHA384".
+   - A client verifies the signature by hashing the certificate and checking
+     it with the CA's public key, which establishes trust.
+   - Certificate fingerprints (SHA-256 thumbprints) are used to identify and
+     pin certificates; Certificate Transparency logs use SHA-256 Merkle trees.
+   - SHA-1 certificates were banned (since 2017) after collision attacks.
+
+2. Digital signatures
+   - RSA, DSA, ECDSA and EdDSA signatures are computed on the SHA hash of the
+     message (hash-then-sign), e.g. RSA-PSS with SHA-256, ECDSA with SHA-384.
+   - Used for software/code signing, signed PDF documents, email (S/MIME, PGP),
+     DNSSEC, DKIM email signatures, firmware updates and blockchain
+     transactions.
+   - Strong hash (SHA-2/SHA-3) ensures nobody can create a different document
+     with the same hash.
+
+3. File integrity checking
+   - Vendors publish SHA-256 checksums for downloads (ISOs, installers);
+     users compute them (e.g. sha256sum file) and compare.
+   - Operating-system package managers and update systems verify package
+     hashes; file integrity monitoring tools (Tripwire, AIDE) store hashes of
+     system files and alert on changes.
+   - Version control (Git uses SHA-1, moving to SHA-256), backup and
+     deduplication systems, digital forensics (hash of evidence image to prove
+     it was not altered), and malware databases (file hashes as signatures).
+   - Merkle trees (hash trees) allow efficient verification of large datasets
+     (blockchains, BitTorrent, certificate transparency).
+
+4. Secure communication
+   - TLS/SSL: SHA-256/384 used in the handshake (hash of the whole handshake
+     transcript in the Finished message), in HMAC for record integrity (older
+     versions), in key derivation (HKDF-SHA256/384) and in AEAD cipher-suite
+     names (e.g. TLS_AES_256_GCM_SHA384).
+   - IPsec/VPN: HMAC-SHA-256 for packet authentication; SSH uses HMAC-SHA2
+     for message integrity and host key fingerprints.
+   - Wi-Fi WPA2/WPA3 and password-based key derivation (PBKDF2-HMAC-SHA1/256).
+   - Tokens and APIs: JWT HS256 (HMAC-SHA-256), AWS request signing, OAuth.
+   - Blockchain and cryptocurrencies: Bitcoin uses double SHA-256 for
+     proof-of-work and block/transaction IDs; Ethereum uses Keccak-256.
+   - Password storage and key derivation: salted hashing with PBKDF2-HMAC-
+     SHA-256 (together with bcrypt/scrypt/Argon2), and random-number
+     generators (HMAC_DRBG, Hash_DRBG).
+
+Security notes: use SHA-256 or stronger for new designs, avoid SHA-1 and MD5
+for security purposes, use HMAC instead of H(key || message), use salted slow
+hashes for passwords, and plan algorithm agility so that the hash function can
+be replaced (e.g. by SHA-3) if weaknesses are found.
+
+
+=============================================================================
+Reference books and sources:
+1. William Stallings, "Cryptography and Network Security: Principles and
+   Practice", Pearson.
+2. Behrouz A. Forouzan, "Cryptography and Network Security", McGraw-Hill.
+3. NIST FIPS 180-4 (Secure Hash Standard) and FIPS 202 (SHA-3 Standard).
+4. RFC 2104 (HMAC); M. Stevens et al., "The first collision for full SHA-1",
+   2017.
+=============================================================================
